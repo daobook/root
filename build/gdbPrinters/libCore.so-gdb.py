@@ -45,8 +45,8 @@ class TStringPrinter(object):
 
    def __init__(self, val):
       self.val = val
-      typeAndAddr = "(*(TString*)"+str(val.address)+")"
-      query = typeAndAddr + ".fRep.fShort.fSize & TString::kShortMask"
+      typeAndAddr = f'(*(TString*){str(val.address)})'
+      query = f'{typeAndAddr}.fRep.fShort.fSize & TString::kShortMask'
       self.isLong = bool(gdb.parse_and_eval(query))
       
    def display_hint(self):

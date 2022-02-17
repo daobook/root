@@ -27,15 +27,10 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
 
         func = getattr(ROOT.RooFit, k)
 
-        if isinstance(func, libcppyy.CPPOverload):
-            # Pythonization for functions that don't pass any RooCmdArgs like ShiftToZero() and MoveToBack(). For Eg,
-            # Default bindings: pdf.plotOn(frame, ROOT.RooFit.MoveToBack())
-            # With pythonizations: pdf.plotOn(frame, MoveToBack=True)
-
-            if "()" in func.func_doc:
-                if not isinstance(v, bool):
-                    raise TypeError("The keyword argument " + k + " can only take bool values.")
-                return func() if v else ROOT.RooCmdArg.none()
+        if isinstance(func, libcppyy.CPPOverload) and "()" in func.func_doc:
+            if not isinstance(v, bool):
+                raise TypeError(f'The keyword argument {k} can only take bool values.')
+            return func() if v else ROOT.RooCmdArg.none()
 
         try:
             # If the keyword argument value is a tuple, list, set, or dict, first
@@ -65,20 +60,18 @@ def _string_to_root_attribute(value, lookup_map):
 
     import ROOT
 
-    if isinstance(value, str):
-        if value in lookup_map:
-            return getattr(ROOT, lookup_map[value])
-        else:
-            try:
-                return getattr(ROOT, value)
-            except:
-                raise ValueError(
-                    "Unsupported value passed. The value either has to be the name of an attribute of the ROOT module, or match with one of the following values that get translated to ROOT attributes: {}".format(
-                        lookup_map
-                    )
-                )
-    else:
+    if not isinstance(value, str):
         return value
+    if value in lookup_map:
+        return getattr(ROOT, lookup_map[value])
+    try:
+        return getattr(ROOT, value)
+    except:
+        raise ValueError(
+            "Unsupported value passed. The value either has to be the name of an attribute of the ROOT module, or match with one of the following values that get translated to ROOT attributes: {}".format(
+                lookup_map
+            )
+        )
 
 
 def _dict_to_std_map(arg_dict, allowed_val_dict):
@@ -95,7 +88,10 @@ def _dict_to_std_map(arg_dict, allowed_val_dict):
     import ROOT
 
     def all_of_class(d, type, check_key):
-        return all([isinstance(key if check_key else value, type) for key, value in d.items()])
+        return all(
+            isinstance(key if check_key else value, type)
+            for key, value in d.items()
+        )
 
     def get_python_class(cpp_type_name):
 
@@ -113,7 +109,7 @@ def _dict_to_std_map(arg_dict, allowed_val_dict):
         if len(l) == 1:
             return l[0]
         if len(l) == 2:
-            return l[0] + " or " + l[1]
+            return f'{l[0]} or {l[1]}'
         return ", ".join(l[:-1]) + ", or " + l[-1]
 
     def get_template_args(import_dict):

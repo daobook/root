@@ -107,9 +107,9 @@ python_roofit_functions = [
 ]
 
 # create a dictionary for convenient access to python classes
-python_classes_dict = dict()
-for python_class in python_classes:
-    python_classes_dict[python_class.__name__] = python_class
+python_classes_dict = {
+    python_class.__name__: python_class for python_class in python_classes
+}
 
 
 def get_defined_attributes(klass, consider_base_classes=False):
@@ -133,13 +133,9 @@ def get_defined_attributes(klass, consider_base_classes=False):
         if funcname in blacklist:
             return False
 
-        in_any_dict = False
-
-        for mro_class in method_resolution_order:
-            if funcname in mro_class.__dict__:
-                in_any_dict = True
-
-        return in_any_dict
+        return any(
+            funcname in mro_class.__dict__ for mro_class in method_resolution_order
+        )
 
     return sorted([attr for attr in dir(klass) if is_defined(attr)])
 
@@ -184,7 +180,7 @@ def make_func_name_orig(func_name):
     if func_name.startswith("__") and func_name.endswith("__"):
         func_name = func_name[2:-2]
 
-    return "_" + func_name
+    return f'_{func_name}'
 
 
 @pythonization("Roo", is_prefix=True)
@@ -193,7 +189,7 @@ def pythonize_roofit_class(klass, name):
     # klass: class to pythonize
     # name: string containing the name of the class
 
-    if not name in python_classes_dict:
+    if name not in python_classes_dict:
         return
 
     python_klass = python_classes_dict[name]
@@ -220,10 +216,9 @@ def pythonize_roofit_class(klass, name):
 
             if func_new.__doc__ is None:
                 func_new.__doc__ = func_orig.__doc__
-            elif not func_orig.__doc__ is None:
+            elif func_orig.__doc__ is not None:
                 python_docstring = func_new.__doc__
-                func_new.__doc__ = "Pythonization info\n"
-                func_new.__doc__ += "==============\n\n"
+                func_new.__doc__ = "Pythonization info\n" + "==============\n\n"
                 func_new.__doc__ += inspect.cleandoc(python_docstring) + "\n\n"
                 func_new.__doc__ += "Documentation of original cppyy.CPPOverload object\n"
                 func_new.__doc__ += "==================================================\n\n"
@@ -240,7 +235,7 @@ def pythonize_roofit_namespace(ns):
 
     for python_func in python_roofit_functions:
         func_name = python_func.__name__
-        func_name_orig = "_" + func_name
+        func_name_orig = f'_{func_name}'
 
         if sys.version_info <= (3, 0):
             # In Python 2 the RooFit is treated like a class and the global

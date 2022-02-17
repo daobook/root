@@ -29,7 +29,7 @@ def main():
 
     if extra_flags is not None:
       # rootcling is picky about order ...
-        args = list()
+        args = []
         try:
             check_idx = rc_idx+1
             if sysargs[check_idx].find('-v', 0, 2) == 0:
@@ -51,7 +51,7 @@ def main():
         if linkdef:
             args.append(linkdef)
     else:
-       args = sys.argv[1:]
+        args = sys.argv[1:]
 
     return subprocess.call([rootcling] + args)
 

@@ -16,10 +16,7 @@ all_configs = [('py', 'py_functioncalls'), ('cppyy', 'cppyy.gbl')]
 
 N = 10000
 preamble = "@pytest.mark.benchmark(group=group, warmup=True)"
-looprange = range
-if sys.hexversion < 0x3000000:
-    looprange = xrange
-
+looprange = xrange if sys.hexversion < 0x3000000 else range
 try:
     import __pypy__
 except ImportError:
@@ -39,20 +36,16 @@ except ImportError:
         warnings.warn('swig tests disabled')
         swig = False
 
-all_benches = []
-
-
-#- group: empty-free ---------------------------------------------------------
-all_benches.append(('empty-free', (
+all_benches = [('empty-free', (
 """
 def test_{0}_free_empty_call(benchmark):
     benchmark({1}.empty_call)
 """,
-)))
+))]
 
 #- group: empty-inst ---------------------------------------------------------
 def call_instance_empty(inst):
-    for i in looprange(N):
+    for _ in looprange(N):
         inst.empty_call()
 
 all_benches.append(('empty-inst', (
@@ -82,15 +75,15 @@ def test_{0}_free_take_a_struct(benchmark):
 
 #- group: builtin-args-inst --------------------------------------------------
 def call_instance_take_an_int(inst, val):
-    for i in looprange(N):
+    for _ in looprange(N):
         inst.take_an_int(1)
 
 def call_instance_take_a_double(inst, val):
-    for i in looprange(N):
+    for _ in looprange(N):
         inst.take_a_double(val)
 
 def call_instance_take_a_struct(inst, val):
-    for i in looprange(N):
+    for _ in looprange(N):
         inst.take_a_struct(val)
 
 
@@ -114,7 +107,7 @@ def test_{0}_inst_take_a_struct(benchmark):
 
 #- group: builtin-args-pass --------------------------------------------------
 def call_instance_pass_int(inst, val):
-    for i in looprange(N):
+    for _ in looprange(N):
         inst.pass_int(val)
 
 all_benches.append(('builtin-args-pass', (
@@ -136,7 +129,7 @@ def test_{0}_free_do_work(benchmark):
 
 #- group: do_work-inst -------------------------------------------------------
 def call_instance_do_work(inst):
-    for i in looprange(N):
+    for _ in looprange(N):
         inst.do_work(1.)
 
 all_benches.append(('do_work-inst', (
@@ -150,7 +143,7 @@ def test_{0}_inst_do_work(benchmark):
 
 #- group: overload-inst ------------------------------------------------------
 def call_instance_overload(inst):
-    for i in looprange(N):
+    for _ in looprange(N):
         inst.add_it(1.)
 
 all_benches.append(('overload-inst', (

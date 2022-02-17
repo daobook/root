@@ -7,21 +7,25 @@ output = sys.argv[2]
 
 def isokay(name):
  # filter standard symbols
-    return name[0] != '_' and not name in {'memcpy', 'memmove', 'memset'}
+    return name[0] != '_' and name not in {'memcpy', 'memmove', 'memset'}
 
-popen = subprocess.Popen(['dumpbin', '/SYMBOLS', target+'.obj'],
-                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+popen = subprocess.Popen(
+    ['dumpbin', '/SYMBOLS', f'{target}.obj'],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+)
+
 
 stdout, _ = popen.communicate()
 stdout = stdout.decode('utf-8').strip()
 
-outf = open(output+'.def', 'w')
+outf = open(f'{output}.def', 'w')
 outf.write('LIBRARY    %s.dll\nEXPORTS\n' % output)
 for line in stdout.split('\r\n'):
     parts = line.split()
     if len(parts) < 8:
         continue
-    if parts[7][0:4] in ['??_G', '??_E']:   # do not export deleting destructors
+    if parts[7][:4] in ['??_G', '??_E']:   # do not export deleting destructors
         continue
     if parts[4] == 'External':
         if isokay(parts[6]):

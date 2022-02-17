@@ -67,12 +67,7 @@ class Node(object):
             operation (DistRDF.Operation.Operation): The operation that this Node
                 represents. This could be :obj:`None`.
         """
-        if get_head is None:
-            # Function to get 'head' Node
-            self.get_head = lambda: self
-        else:
-            self.get_head = get_head
-
+        self.get_head = (lambda: self) if get_head is None else get_head
         self.operation = operation
         self.children = []
         self._new_op_name = ""
@@ -125,26 +120,25 @@ class Node(object):
             bool: True if the node has no children and no user references or
             its value has already been computed, False otherwise.
         """
-        if not self.children:
-            # Every pruning condition is written on a separate line
-            if not self.has_user_references or \
-               (self.operation and self.operation.is_action() and self.value):
+        if not self.children and (
+            not self.has_user_references
+            or (self.operation and self.operation.is_action() and self.value)
+        ):
+            # ***** Condition 1 *****
+            # If the node is wrapped by a proxy which is not directly
+            # assigned to a variable, then it will be flagged for pruning
 
-                # ***** Condition 1 *****
-                # If the node is wrapped by a proxy which is not directly
-                # assigned to a variable, then it will be flagged for pruning
+            # ***** Condition 2 *****
+            # If the current node's value was already
+            # computed, it should get pruned only if it's
+            # an Action node.
 
-                # ***** Condition 2 *****
-                # If the current node's value was already
-                # computed, it should get pruned only if it's
-                # an Action node.
+            # Logger debug statements
+            logger.debug("{} node can be pruned".format(
+                self.operation.name
+            ))
 
-                # Logger debug statements
-                logger.debug("{} node can be pruned".format(
-                    self.operation.name
-                ))
-
-                return True
+            return True
 
         # Logger debug statements
         if self.operation:  # Node has an operation
@@ -165,8 +159,6 @@ class Node(object):
         Returns:
             bool: True if the current node has to be pruned, False otherwise.
         """
-        children = []
-
         # Logger debug statements
         if self.operation:
             logger.debug("Checking {} node for pruning".format(
@@ -175,11 +167,6 @@ class Node(object):
         else:
             logger.debug("Starting computational graph pruning")
 
-        for n in self.children:
-            # Logger debug statement
-            # Select children based on pruning condition
-            if not n.graph_prune():
-                children.append(n)
-
+        children = [n for n in self.children if not n.graph_prune()]
         self.children = children
         return self.is_prunable()

@@ -258,7 +258,7 @@ class TreeHeadNode(Node.Node):
                 elist.SetFileName(filename)
                 elist.EnterRange(start, end)
                 elists.AddSubList(elist)
-                chain.Add(filename + "?#" + subtreename, treenentries)
+                chain.Add(f'{filename}?#{subtreename}', treenentries)
 
             # We assume 'end' is exclusive
             chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
@@ -293,7 +293,7 @@ class TreeHeadNode(Node.Node):
                     else:
                         # This friend is a TChain, add all files with their tree names
                         for filename, chainsubname in zip(friend_filenames, friend_chainsubnames):
-                            fullpath = filename + "/" + chainsubname
+                            fullpath = f'{filename}/{chainsubname}'
                             friend_chain.Add(str(fullpath))
 
                     # Set cache on the same range as the parent TChain

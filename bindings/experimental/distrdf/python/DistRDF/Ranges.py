@@ -233,9 +233,7 @@ def get_clusters(treenames, filenames):
     clusters = []
 
     offset = 0
-    fileindex = 0
-
-    for treename, filename in zip(treenames, filenames):
+    for fileindex, (treename, filename) in enumerate(zip(treenames, filenames)):
         f = ROOT.TFile.Open(filename)
         t = f.Get(treename)
 
@@ -249,7 +247,6 @@ def get_clusters(treenames, filenames):
             clusters.append(ChainCluster(start, end, offset, FileAndIndex(filename, fileindex), entries, treename))
             start = end
 
-        fileindex += 1
         offset += entries
 
     return clusters
@@ -345,8 +342,7 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
 
 
     clustered_ranges = []
-    rangeid = 0 # Keep track of the current range id
-    for partition in clustersbypartition:
+    for rangeid, partition in enumerate(clustersbypartition):
 
         # One partition looks like:
         #     [
@@ -442,6 +438,4 @@ def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
         globalend = lastclusterinpartition.end + lastclusterinpartition.offset - partitionoffset
 
         clustered_ranges.append(TreeRange(rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, treenames, friendinfo))
-        rangeid += 1
-
     return clustered_ranges

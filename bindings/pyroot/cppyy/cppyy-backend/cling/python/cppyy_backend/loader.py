@@ -10,11 +10,7 @@ __all__ = [
 
 import os, sys, ctypes, subprocess, sysconfig, warnings
 
-if 'win32' in sys.platform:
-    soext = '.dll'
-else:
-    soext = '.so'
-
+soext = '.dll' if 'win32' in sys.platform else '.so'
 soabi = sysconfig.get_config_var("SOABI")
 
 
@@ -62,9 +58,9 @@ def load_cpp_backend():
         if bkname.rfind(soext) < 0:
             bkname += soext
     except KeyError:
-        bkname = 'libcppyy_backend'+soext
+        bkname = f'libcppyy_backend{soext}'
         if soabi:
-            altbkname = 'libcppyy_backend.'+soabi+soext
+            altbkname = f'libcppyy_backend.{soabi}{soext}'
 
     c = _load_helper(bkname)
     if not c and altbkname is not None:
@@ -78,7 +74,7 @@ def load_cpp_backend():
 
 def set_cling_compile_options(add_defaults = False):
  # extra optimization flags for Cling
-    if not 'EXTRA_CLING_ARGS' in os.environ:
+    if 'EXTRA_CLING_ARGS' not in os.environ:
         CURRENT_ARGS = ''
         add_defaults = True
     else:

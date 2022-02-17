@@ -3,9 +3,8 @@
 
 def pypy58_57_compat():
     import imp, os
-
   # first load and move the builtin cppyy module
-    if not 'cppyy' in sys.modules:
+    if 'cppyy' not in sys.modules:
         try:
             olddir = os.getcwd()
             from cppyy_backend import loader
@@ -22,7 +21,6 @@ def pypy58_57_compat():
 
     sys.modules['_cppyy'] = sys.modules['cppyy']
     del sys.modules['cppyy']
-
   # now locate and load the pip cppyy module
     decdir = os.path.join(os.path.dirname(__file__), os.path.pardir)
     for path in sys.path:     # walk over sys.path skips builtins
@@ -32,7 +30,6 @@ def pypy58_57_compat():
             break
         except ImportError:
             pass
-
   # copy over the _cppyy functions into cppyy
     old = sys.modules['_cppyy']
     new = sys.modules['cppyy']

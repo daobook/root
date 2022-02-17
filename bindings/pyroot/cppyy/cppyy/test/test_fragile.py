@@ -357,14 +357,14 @@ class TestFRAGILE:
         assert cppyy.addressof(handle) == 0x42
 
         raises(TypeError, cppyy.gbl.fragile.OpaqueType)
-        assert not 'OpaqueType' in cppyy.gbl.fragile.__dict__
+        assert 'OpaqueType' not in cppyy.gbl.fragile.__dict__
 
         handle = cppyy.gbl.fragile.OpaqueHandle_t()
         assert not handle
 
         addr = cppyy.gbl.fragile.create_handle(handle);
         assert addr
-        assert not not handle
+        assert bool(handle)
 
         assert cppyy.gbl.fragile.destroy_handle(handle, addr);
 
@@ -405,9 +405,9 @@ class TestFRAGILE:
 
         dd = dir(cppyy.gbl)
 
-        assert not 'TCanvasImp' in dd
-        assert not 'ESysConstants' in dd
-        assert not 'kDoRed' in dd
+        assert 'TCanvasImp' not in dd
+        assert 'ESysConstants' not in dd
+        assert 'kDoRed' not in dd
 
 
 class TestSIGNALS:

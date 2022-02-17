@@ -11,12 +11,7 @@
 import cppyy
 
 def _next_pyz(self):
-    # Parameters:
-    # - self: iterator on a collection
-    # Returns:
-    # - next object in the collection, or raises StopIteration if none
-	o = self.Next()
-	if o:
+	if o := self.Next():
 		return o
 	else:
 		raise StopIteration()

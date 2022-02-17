@@ -125,18 +125,15 @@ def GetDeepNetworkOld(xml_file, returnObj=False):
     tree = ElementTree()
     tree.parse(xml_file)
     roottree = tree.getroot()
-    network  = {}
-    network["variables"] = []
+    network = {'variables': []}
     for v in roottree.find("Variables"):
         network["variables"].append(v.get('Title'))
     layout = roottree.find("Weights").find("Layout")
-    net    = []
-    for layer in layout:
-        net.append({"Connection": layer.get("Connection"),
+    net = [{"Connection": layer.get("Connection"),
         "Nodes": layer.get("Nodes"),
         "ActivationFunction": layer.get("ActivationFunction"),
         "OutputMode": layer.get("OutputMode")
-         })
+         } for layer in layout]
     network["layers"] = net
     Synapses = roottree.find("Weights").find("Synapses")
     synapses = {
@@ -161,8 +158,7 @@ def GetDeepNetwork(xml_file, returnObj=False):
     tree = ElementTree()
     tree.parse(xml_file)
     roottree = tree.getroot()
-    network  = {}
-    network["variables"] = []
+    network = {'variables': []}
     for v in roottree.find("Variables"):
         network["variables"].append(v.get('Title'))
     layers = []
@@ -204,8 +200,7 @@ def GetNetwork(xml_file):
     tree = ElementTree()
     tree.parse(xml_file)
     roottree = tree.getroot()
-    network  = {}
-    network["variables"] = []
+    network = {'variables': []}
     for v in roottree.find("Variables"):
         network["variables"].append(v.get('Title'))
     layout = roottree.find("Weights").find("Layout")
@@ -216,7 +211,7 @@ def GetNetwork(xml_file):
         neurons    = { "nneurons": neuron_num }
         i = 0
         for neuron in layer:
-            label = "neuron_"+str(i)
+            label = f'neuron_{i}'
             i    += 1
             nsynapses = int(neuron.get('NSynapses'))
             neurons[label] = {"nsynapses": nsynapses}
@@ -224,10 +219,7 @@ def GetNetwork(xml_file):
                 break
             text = str(neuron.text)
             wall = text.replace("\n","").split(" ")
-            weights = []
-            for w in wall:
-                if w!="":
-                    weights.append(float(w))
+            weights = [float(w) for w in wall if w!=""]
             neurons[label]["weights"] = weights
         net["layer_"+str(layer.get('Index'))] = neurons
     network["layout"] = net
@@ -325,7 +317,7 @@ def DrawROCCurve(fac, datasetName):
 # @param methodName we want to see the output distribution of this method
 def DrawOutputDistribution(fac, datasetName, methodName):
     method = GetMethodObject(fac, datasetName, methodName)
-    if method==None:
+    if method is None:
         return None
     mvaRes = method.Data().GetResults(method.GetMethodName(), TMVA.Types.kTesting, TMVA.Types.kMaxAnalysisType)
     sig    = mvaRes.GetHist("MVA_S")

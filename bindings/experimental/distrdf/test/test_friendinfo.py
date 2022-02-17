@@ -109,12 +109,12 @@ class FriendInfoTest(unittest.TestCase):
         actualfriendchainfilenames = []
         actualfriendchainsubnames = []
         for i in range(1,4):
-            friend_name = "treefriend" + str(i)
-            friend_filename = friend_name + ".root"
+            friend_name = f'treefriend{str(i)}'
+            friend_filename = f'{friend_name}.root'
             actualfriendchainfilenames.append(friend_filename)
             actualfriendchainsubnames.append(friend_name)
             self.create_friend_tree(friend_name, friend_filename)
-            friendchain.Add(friend_filename + "/" + friend_name)
+            friendchain.Add(f'{friend_filename}/{friend_name}')
 
         # Add friendTree to the parent
         maintree.AddFriend(friendchain)

@@ -32,18 +32,7 @@ def _extend_pyz(self, c):
         self.Add(next(it))
 
 def _count_pyz(self, o):
-    # Parameters:
-    # - self: collection
-    # - o: object to be counted in the collection
-    # Returns:
-    # - Number of occurrences of the object in the collection
-    n = 0
-
-    for elem in self:
-        if elem == o:
-            n += 1
-
-    return n
+    return sum(elem == o for elem in self)
 
 # Python operators
 
@@ -84,13 +73,7 @@ def _imul_pyz(self, n):
 # Python iteration
 
 def _iter_pyz(self):
-    # Generator function to iterate on TCollections
-    # Parameters:
-    # - self: collection to be iterated
-    it = cppyy.gbl.TIter(self)
-    # TIter instances are iterable
-    for o in it:
-        yield o
+    yield from cppyy.gbl.TIter(self)
 
 
 @pythonization('TCollection')

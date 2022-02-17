@@ -146,7 +146,6 @@ class TestCPP11FEATURES:
             assert T.s_instance_counter == 0
 
             from cppyy.gbl import std
-
           # move constructor
             i1 = T()
             assert T.s_move_counter == 0
@@ -154,7 +153,7 @@ class TestCPP11FEATURES:
             i2 = T(i1)  # cctor
             assert T.s_move_counter == 0
 
-            if is_pypy or 0x3000000 <= sys.hexversion:
+            if is_pypy or sys.hexversion >= 0x3000000:
                 i3 = T(std.move(T()))            # can't check ref-count
             else:
                 i3 = T(T()) # should call move, not memoized cctor
@@ -165,12 +164,11 @@ class TestCPP11FEATURES:
 
             i4 = T(std.move(i1))
             assert T.s_move_counter == 3
-
           # move assignment
             i4.__assign__(i2)
             assert T.s_move_counter == 3
 
-            if is_pypy or 0x3000000 <= sys.hexversion:
+            if is_pypy or sys.hexversion >= 0x3000000:
                 i4.__assign__(std.move(T()))     # can't check ref-count
             else:
                 i4.__assign__(T())
@@ -212,10 +210,7 @@ class TestCPP11FEATURES:
 
         for cls in [std.vector, WithInitList]:
             for cls_arg in [TestData, TestData2]:
-                l = list()
-                for i in range(10):
-                    l.append(cls_arg(i))
-
+                l = [cls_arg(i) for i in range(10)]
                 v = cls[cls_arg](l)
                 assert len(v) == len(l)
                 for i in range(len(l)):
@@ -253,7 +248,7 @@ class TestCPP11FEATURES:
 
         import cppyy
 
-        if 201703 <= cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;"):
+        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 201703:
             assert cppyy.gbl.std.optional
             assert cppyy.gbl.std.nullopt
 
@@ -311,7 +306,7 @@ class TestCPP11FEATURES:
         import cppyy
         from cppyy.gbl import StructWithHash, StructWithoutHash
 
-        for i in range(3):   # to test effect of caching
+        for _ in range(3):
             swo = StructWithoutHash()
             assert hash(swo) == object.__hash__(swo)
             assert hash(swo) == object.__hash__(swo)

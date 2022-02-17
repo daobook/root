@@ -41,7 +41,7 @@ def make_tree(*dtypes):
         col_vars.append(var)
 
     for dtype, name, var in zip(dtypes, col_names, col_vars):
-        tree.Branch(name, var, name + "/" + dtype)
+        tree.Branch(name, var, f'{name}/{dtype}')
 
     reference = {col: [] for col in col_names}
     for i in range(5):
@@ -61,8 +61,7 @@ def create_slice_in_scope():
     df = ROOT.ROOT.RDataFrame(4).Define("x", "(double)rdfentry_")
     npy = df.AsNumpy()
     x = npy["x"]
-    x2 = x[:2]
-    return x2
+    return x[:2]
 
 
 class RDataFrameAsNumpy(unittest.TestCase):
@@ -87,8 +86,8 @@ class RDataFrameAsNumpy(unittest.TestCase):
         """
         df = ROOT.RDataFrame(2).Define("x", "bool(rdfentry_)")
         npy = df.AsNumpy()
-        self.assertTrue(bool(npy["x"][0]) == False)
-        self.assertTrue(bool(npy["x"][1]) == True)
+        self.assertTrue(not bool(npy["x"][0]))
+        self.assertTrue(bool(npy["x"][1]))
 
     def test_read_array(self):
         """

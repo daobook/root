@@ -141,109 +141,190 @@ class TestLOWLEVEL:
         import cppyy, ctypes
 
         ctd = cppyy.gbl.CppyyTestData()
-
       ### pass by reference/pointer and set value back
 
         for e in ['_r', '_p']:
           # boolean type
-            b = ctypes.c_bool(False);      getattr(ctd, 'set_bool'+e)(b);     assert b.value == True
-
+            b = ctypes.c_bool(False)
+            getattr(ctd, f'set_bool{e}')(b)
+            assert b.value == True
           # char types
             if e == '_r':
-                c = ctypes.c_char(b'\0');  getattr(ctd, 'set_char'+e)(c);     assert c.value == b'a'
-                c = ctypes.c_wchar(u'\0'); getattr(ctd, 'set_wchar'+e)(c);    assert c.value == u'b'
-                c = ctypes.c_byte(0);      getattr(ctd, 'set_schar'+e)(c);    assert c.value == ord('c')
-            c = ctypes.c_ubyte(0);         getattr(ctd, 'set_uchar'+e)(c);    assert c.value == ord('d')
-
+                c = ctypes.c_char(b'\0')
+                getattr(ctd, f'set_char{e}')(c)
+                assert c.value == b'a'
+                c = ctypes.c_wchar(u'\0')
+                getattr(ctd, f'set_wchar{e}')(c)
+                assert c.value == u'b'
+                c = ctypes.c_byte(0)
+                getattr(ctd, f'set_schar{e}')(c)
+                assert c.value == ord('c')
+            c = ctypes.c_ubyte(0)
+            getattr(ctd, f'set_uchar{e}')(c)
+            assert c.value == ord('d')
           # integer types
-            i = ctypes.c_short(0);         getattr(ctd, 'set_short'+e)(i);    assert i.value == -1
-            i = ctypes.c_ushort(0);        getattr(ctd, 'set_ushort'+e)(i);   assert i.value ==  2
-            i = ctypes.c_int(0);           getattr(ctd, 'set_int'+e)(i);      assert i.value == -3
-            i = ctypes.c_uint(0);          getattr(ctd, 'set_uint'+e)(i);     assert i.value ==  4
-            i = ctypes.c_long(0);          getattr(ctd, 'set_long'+e)(i);     assert i.value == -5
-            i = ctypes.c_ulong(0);         getattr(ctd, 'set_ulong'+e)(i);    assert i.value ==  6
-            i = ctypes.c_longlong(0);      getattr(ctd, 'set_llong'+e)(i);    assert i.value == -7
-            i = ctypes.c_ulonglong(0);     getattr(ctd, 'set_ullong'+e)(i);   assert i.value ==  8
-
+            i = ctypes.c_short(0)
+            getattr(ctd, f'set_short{e}')(i)
+            assert i.value == -1
+            i = ctypes.c_ushort(0)
+            getattr(ctd, f'set_ushort{e}')(i)
+            assert i.value ==  2
+            i = ctypes.c_int(0)
+            getattr(ctd, f'set_int{e}')(i)
+            assert i.value == -3
+            i = ctypes.c_uint(0)
+            getattr(ctd, f'set_uint{e}')(i)
+            assert i.value ==  4
+            i = ctypes.c_long(0)
+            getattr(ctd, f'set_long{e}')(i)
+            assert i.value == -5
+            i = ctypes.c_ulong(0)
+            getattr(ctd, f'set_ulong{e}')(i)
+            assert i.value ==  6
+            i = ctypes.c_longlong(0)
+            getattr(ctd, f'set_llong{e}')(i)
+            assert i.value == -7
+            i = ctypes.c_ulonglong(0)
+            getattr(ctd, f'set_ullong{e}')(i)
+            assert i.value ==  8
           # floating point types
-            f = ctypes.c_float(0);         getattr(ctd, 'set_float'+e)(f);    assert f.value ==  5.
-            f = ctypes.c_double(0);        getattr(ctd, 'set_double'+e)(f);   assert f.value == -5.
-            f = ctypes.c_longdouble(0);    getattr(ctd, 'set_ldouble'+e)(f);  assert f.value == 10.
-
+            f = ctypes.c_float(0)
+            getattr(ctd, f'set_float{e}')(f)
+            assert f.value ==  5.
+            f = ctypes.c_double(0)
+            getattr(ctd, f'set_double{e}')(f)
+            assert f.value == -5.
+            f = ctypes.c_longdouble(0)
+            getattr(ctd, f'set_ldouble{e}')(f)
+            assert f.value == 10.
       ### pass by pointer and set value back, now using byref (not recommended)
 
         cb = ctypes.byref
-
       # boolean type
-        b = ctypes.c_bool(False);     ctd.set_bool_p(cb(b));     assert b.value == True
-
+        b = ctypes.c_bool(False)
+        ctd.set_bool_p(cb(b))
+        assert b.value == True
       # char types
-        c = ctypes.c_ubyte(0);        ctd.set_uchar_p(cb(c));    assert c.value == ord('d')
-
+        c = ctypes.c_ubyte(0)
+        ctd.set_uchar_p(cb(c))
+        assert c.value == ord('d')
       # integer types
-        i = ctypes.c_short(0);        ctd.set_short_p(cb(i));    assert i.value == -1
-        i = ctypes.c_ushort(0);       ctd.set_ushort_p(cb(i));   assert i.value ==  2
-        i = ctypes.c_int(0);          ctd.set_int_p(cb(i));      assert i.value == -3
-        i = ctypes.c_uint(0);         ctd.set_uint_p(cb(i));     assert i.value ==  4
-        i = ctypes.c_long(0);         ctd.set_long_p(cb(i));     assert i.value == -5
-        i = ctypes.c_ulong(0);        ctd.set_ulong_p(cb(i));    assert i.value ==  6
-        i = ctypes.c_longlong(0);     ctd.set_llong_p(cb(i));    assert i.value == -7
-        i = ctypes.c_ulonglong(0);    ctd.set_ullong_p(cb(i));   assert i.value ==  8
-
+        i = ctypes.c_short(0)
+        ctd.set_short_p(cb(i))
+        assert i.value == -1
+        i = ctypes.c_ushort(0)
+        ctd.set_ushort_p(cb(i))
+        assert i.value ==  2
+        i = ctypes.c_int(0)
+        ctd.set_int_p(cb(i))
+        assert i.value == -3
+        i = ctypes.c_uint(0)
+        ctd.set_uint_p(cb(i))
+        assert i.value ==  4
+        i = ctypes.c_long(0)
+        ctd.set_long_p(cb(i))
+        assert i.value == -5
+        i = ctypes.c_ulong(0)
+        ctd.set_ulong_p(cb(i))
+        assert i.value ==  6
+        i = ctypes.c_longlong(0)
+        ctd.set_llong_p(cb(i))
+        assert i.value == -7
+        i = ctypes.c_ulonglong(0)
+        ctd.set_ullong_p(cb(i))
+        assert i.value ==  8
       # floating point types
-        f = ctypes.c_float(0);        ctd.set_float_p(cb(f));    assert f.value ==  5.
-        f = ctypes.c_double(0);       ctd.set_double_p(cb(f));   assert f.value == -5.
-
+        f = ctypes.c_float(0)
+        ctd.set_float_p(cb(f))
+        assert f.value ==  5.
+        f = ctypes.c_double(0)
+        ctd.set_double_p(cb(f))
+        assert f.value == -5.
       ### pass by ptr/ptr with allocation (ptr/ptr is ambiguous in it's task, so many
         # types are allowed to pass; this tests allocation into the pointer)
 
         from ctypes import POINTER
-
       # boolean type
-        b = POINTER(ctypes.c_bool)();     ctd.set_bool_ppa(b);
-        assert b[0] == True; assert b[1] == False; assert b[2] == True
+        b = POINTER(ctypes.c_bool)()
+        ctd.set_bool_ppa(b);
+        assert b[0] == True
+        assert b[1] == False
+        assert b[2] == True
         cppyy.ll.array_delete(b)
-
       # char types
-        c = POINTER(ctypes.c_ubyte)();    ctd.set_uchar_ppa(c)
-        assert c[0] == ord('k'); assert c[1] == ord('l'); assert c[2] == ord('m')
+        c = POINTER(ctypes.c_ubyte)()
+        ctd.set_uchar_ppa(c)
+        assert c[0] == ord('k')
+        assert c[1] == ord('l')
+        assert c[2] == ord('m')
         cppyy.ll.array_delete(c)
-
       # integer types
-        i = POINTER(ctypes.c_short)();        ctd.set_short_ppa(i)
-        assert i[0] ==  -1; assert i[1] ==  -2; assert i[2] ==  -3
+        i = POINTER(ctypes.c_short)()
+        ctd.set_short_ppa(i)
+        assert i[0] ==  -1
+        assert i[1] ==  -2
+        assert i[2] ==  -3
         cppyy.ll.array_delete(i)
-        i = POINTER(ctypes.c_ushort)();       ctd.set_ushort_ppa(i)
-        assert i[0] ==   4; assert i[1] ==   5; assert i[2] ==   6
+        i = POINTER(ctypes.c_ushort)()
+        ctd.set_ushort_ppa(i)
+        assert i[0] ==   4
+        assert i[1] ==   5
+        assert i[2] ==   6
         cppyy.ll.array_delete(i)
-        i = POINTER(ctypes.c_int)();          ctd.set_int_ppa(i)
-        assert i[0] ==  -7; assert i[1] ==  -8; assert i[2] ==  -9
+        i = POINTER(ctypes.c_int)()
+        ctd.set_int_ppa(i)
+        assert i[0] ==  -7
+        assert i[1] ==  -8
+        assert i[2] ==  -9
         cppyy.ll.array_delete(i)
-        i = POINTER(ctypes.c_uint)();         ctd.set_uint_ppa(i)
-        assert i[0] ==  10; assert i[1] ==  11; assert i[2] ==  12
+        i = POINTER(ctypes.c_uint)()
+        ctd.set_uint_ppa(i)
+        assert i[0] ==  10
+        assert i[1] ==  11
+        assert i[2] ==  12
         cppyy.ll.array_delete(i)
-        i = POINTER(ctypes.c_long)();         ctd.set_long_ppa(i)
-        assert i[0] == -13; assert i[1] == -14; assert i[2] == -15
+        i = POINTER(ctypes.c_long)()
+        ctd.set_long_ppa(i)
+        assert i[0] == -13
+        assert i[1] == -14
+        assert i[2] == -15
         cppyy.ll.array_delete(i)
-        i = POINTER(ctypes.c_ulong)();        ctd.set_ulong_ppa(i)
-        assert i[0] ==  16; assert i[1] ==  17; assert i[2] ==  18
+        i = POINTER(ctypes.c_ulong)()
+        ctd.set_ulong_ppa(i)
+        assert i[0] ==  16
+        assert i[1] ==  17
+        assert i[2] ==  18
         cppyy.ll.array_delete(i)
-        i = POINTER(ctypes.c_longlong)();     ctd.set_llong_ppa(i)
-        assert i[0] == -19; assert i[1] == -20; assert i[2] == -21
+        i = POINTER(ctypes.c_longlong)()
+        ctd.set_llong_ppa(i)
+        assert i[0] == -19
+        assert i[1] == -20
+        assert i[2] == -21
         cppyy.ll.array_delete(i)
-        i = POINTER(ctypes.c_ulonglong)();    ctd.set_ullong_ppa(i)
-        assert i[0] ==  22; assert i[1] ==  23; assert i[2] ==  24
+        i = POINTER(ctypes.c_ulonglong)()
+        ctd.set_ullong_ppa(i)
+        assert i[0] ==  22
+        assert i[1] ==  23
+        assert i[2] ==  24
         cppyy.ll.array_delete(i)
-
       # floating point types
-        f = POINTER(ctypes.c_float)();        ctd.set_float_ppa(f)
-        assert f[0] ==   5; assert f[1] ==  10; assert f[2] ==  20
+        f = POINTER(ctypes.c_float)()
+        ctd.set_float_ppa(f)
+        assert f[0] ==   5
+        assert f[1] ==  10
+        assert f[2] ==  20
         cppyy.ll.array_delete(f)
-        f = POINTER(ctypes.c_double)();       ctd.set_double_ppa(f)
-        assert f[0] ==  -5; assert f[1] == -10; assert f[2] == -20
+        f = POINTER(ctypes.c_double)()
+        ctd.set_double_ppa(f)
+        assert f[0] ==  -5
+        assert f[1] == -10
+        assert f[2] == -20
         cppyy.ll.array_delete(f)
-        f = POINTER(ctypes.c_longdouble)();   ctd.set_ldouble_ppa(f)
-        assert f[0] ==   5; assert f[1] ==  10; assert f[2] ==  20
+        f = POINTER(ctypes.c_longdouble)()
+        ctd.set_ldouble_ppa(f)
+        assert f[0] ==   5
+        assert f[1] ==  10
+        assert f[2] ==  20
         cppyy.ll.array_delete(f)
 
     def test06_ctypes_pointer_types(self):
@@ -264,12 +345,12 @@ class TestLOWLEVEL:
 
         ptr = ctypes.c_char_p()
         for meth in ['char', 'cchar']:
-            val = getattr(ctd, 'set_'+meth+'_ppm')(ptr)
+            val = getattr(ctd, f'set_{meth}_ppm')(ptr)
             assert ctd.freeit(ptr) == val
 
         ptr = ctypes.c_wchar_p()
         for meth in ['wchar', 'cwchar']:
-            val = getattr(ctd, 'set_'+meth+'_ppm')(ptr)
+            val = getattr(ctd, f'set_{meth}_ppm')(ptr)
             assert ctd.freeit(ptr) == val
 
         ptr = ctypes.c_void_p()
@@ -290,4 +371,5 @@ class TestLOWLEVEL:
         i = ctypes.c_int(0);
         for ext in ['_r', '_p']:
             for meth in meth_types:
-                with raises(TypeError): getattr(ctd, 'set_'+meth+ext)(i)
+                with raises(TypeError):
+                    getattr(ctd, f'set_{meth}{ext}')(i)

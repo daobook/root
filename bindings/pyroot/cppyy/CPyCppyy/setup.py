@@ -38,9 +38,7 @@ def is_manylinux():
     return False
 
 def _get_link_libraries():
-    if 'win32' in sys.platform:
-        return ['libcppyy_backend', 'libCore']
-    return []
+    return ['libcppyy_backend', 'libCore'] if 'win32' in sys.platform else []
 
 def _get_link_dirs():
     if 'win32' in sys.platform:
@@ -98,22 +96,17 @@ cmdclass = {
 #
 class MyDistribution(Distribution):
     def run_commands(self):
-        # pip does not resolve dependencies before building binaries, so unless
-        # packages are installed one-by-one, on old install is used or the build
-        # will simply fail hard. The following is not completely quiet, but at
-        # least a lot less conspicuous.
-        if not is_manylinux() and not force_bdist:
-            disabled = set((
-                'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
-            for cmd in self.commands:
-                if not cmd in disabled:
-                    self.run_command(cmd)
-                else:
-                    log.info('Command "%s" is disabled', cmd)
-                    cmd_obj = self.get_command_obj(cmd)
-                    cmd_obj.get_outputs = lambda: None
-        else:
+        if is_manylinux() or force_bdist:
             return Distribution.run_commands(self)
+        disabled = set((
+            'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
+        for cmd in self.commands:
+            if cmd not in disabled:
+                self.run_command(cmd)
+            else:
+                log.info('Command "%s" is disabled', cmd)
+                cmd_obj = self.get_command_obj(cmd)
+                cmd_obj.get_outputs = lambda: None
 
 
 setup(

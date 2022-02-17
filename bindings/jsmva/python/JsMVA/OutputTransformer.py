@@ -31,16 +31,21 @@ class transformTMVAOutputToHTML:
         if line.find("time")!=-1:
             lr = line.split(":")
             if len(lr)==2:
-                line = "<b>" + lr[0] + " : <b style='color:rgb(0,0,179)'>" +  lr[1].replace("\033[1;31m", "").replace("[0m", "") +"</b></b>"
+                line = (
+                    f'<b>{lr[0]}'
+                    + " : <b style='color:rgb(0,0,179)'>"
+                    + lr[1].replace("\033[1;31m", "").replace("[0m", "")
+                    + "</b></b>"
+                )
+
         outFlag = self.__outputFlagClass
         if line.find("\033[0;36m")!=-1:
             line = "<b style='color:#006666'>" + line.replace("\033[0;36m", "").replace("[0m", "") + "</b>"
         if line.find("\033[1m")!=-1:
             line = "<b>" + line.replace("\033[1m", "").replace("[0m", "") + "</b>"
-        lre = re.match(r"(\s*using\s*input\s*file\s*):?\s*(.*)", line, re.I)
-        if lre:
-            line = lre.group(1)+":"+"<b>"+lre.group(2)+"</b>"
-        return "<td"+outFlag+">"+str(line)+"</td>"
+        if lre := re.match(r"(\s*using\s*input\s*file\s*):?\s*(.*)", line, re.I):
+            line = f'{lre.group(1)}:<b>{lre.group(2)}</b>'
+        return f'<td{outFlag}>{str(line)}</td>'
 
     ## Checks if a line is empty.
     # @param self object pointer
@@ -62,17 +67,14 @@ class transformTMVAOutputToHTML:
                 count += 1
                 continue
             DatasetName = re.match(r".*(\[.*\])\s*:\s*(.*)", nextline)
-            if DatasetName:
-                count += 1
-                tmp_str += "<tr>"+self.__processGroupContentLine(DatasetName.group(2))
-                tmp_str += "<td class='tmva_output_hidden_td'></td></tr>"
-            else:
+            if not DatasetName:
                 break
+            count += 1
+            tmp_str += "<tr>"+self.__processGroupContentLine(DatasetName.group(2))
+            tmp_str += "<td class='tmva_output_hidden_td'></td></tr>"
         DatasetName = re.match(r".*(\[.*\])\s*:\s*(.*)", firstLine)
         self.__lastDataSetName = DatasetName.group(1).replace("[", "").replace("]", "")
-        tbodyclass = ""
-        if count > 0:
-            tbodyclass = " class='tmva_output_tbody_multiple_row'"
+        tbodyclass = " class='tmva_output_tbody_multiple_row'" if count > 0 else ""
         rstr = "<table class='tmva_output_dataset'><tbody"+tbodyclass+">"
         rstr += "<tr><td rowspan='"+str(count+1)+"'>Dataset: "+self.__lastDataSetName+"</td>"
         rstr += self.__processGroupContentLine(DatasetName.group(2)) + "<td class='tmva_output_hidden_td'></td></tr>"
@@ -94,29 +96,37 @@ class transformTMVAOutputToHTML:
             if self.__isEmpty(nextline):
                 count += 1
                 continue
-            NumberOfEvents = re.match(r"\s+:\s*\w+\s*-\s*-\s*((training\sevents)|(testing\sevents)|(training\sand\stesting\sevents))\s*:\s*\d+", nextline)
-            if NumberOfEvents:
-                lc = re.findall(r"\w+", nextline)
-                t = ""
-                for i in range(1, len(lc) - 1):
-                    t += lc[i] + " "
-                t = t[:-1]
-                if lc[0] not in tmpmap:
-                    tmpmap[lc[0]] = []
-                count += 1
-                tmpmap[lc[0]].append({"name": t, "value": lc[len(lc) - 1]})
-            else:
+            if not (
+                NumberOfEvents := re.match(
+                    r"\s+:\s*\w+\s*-\s*-\s*((training\sevents)|(testing\sevents)|(training\sand\stesting\sevents))\s*:\s*\d+",
+                    nextline,
+                )
+            ):
                 break
+            lc = re.findall(r"\w+", nextline)
+            t = "".join(f'{lc[i]} ' for i in range(1, len(lc) - 1))
+            t = t[:-1]
+            if lc[0] not in tmpmap:
+                tmpmap[lc[0]] = []
+            count += 1
+            tmpmap[lc[0]].append({"name": t, "value": lc[len(lc) - 1]})
         rstr = "<table class='tmva_output_traintestevents'>"
         rstr += "<tr><td colspan='3'><center><b>"+firstLine+"</b></center></td></tr>"
-        for key in tmpmap:
+        for key, value in tmpmap.items():
             rstr += "<tr>"
             rstr += "<td rowspan='"+str(len(tmpmap[key]))+"'>"+key+"</td>"
             rstr += "<td>"+tmpmap[key][0]["name"]+"</td><td>"+tmpmap[key][0]["value"]+"</td>"
             rstr += "<td class='tmva_output_hidden_td'></td>"
             rstr += "</tr>"
             for i in xrange(1, len(tmpmap[key])):
-                rstr += "<tr><td>"+tmpmap[key][i]["name"]+"</td><td>"+tmpmap[key][i]["value"]+"</td>"
+                rstr += (
+                    "<tr><td>"
+                    + value[i]["name"]
+                    + "</td><td>"
+                    + tmpmap[key][i]["value"]
+                    + "</td>"
+                )
+
                 rstr += "<td class='tmva_output_hidden_td'></td></tr>"
         rstr += tmp_str
         rstr += "</table>"
@@ -137,12 +147,13 @@ class transformTMVAOutputToHTML:
             if self.__isEmpty(nextline):
                 count += 1
                 continue
-            VariableMean = re.match(r"\s*:\s*([\w\d]+)\s*:\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\[\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\]", nextline, re.I)
-            if VariableMean:
+            if VariableMean := re.match(
+                r"\s*:\s*([\w\d]+)\s*:\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\[\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\]",
+                nextline,
+                re.I,
+            ):
                 count += 1
-                tmp = []
-                for j in range(1, 6):
-                    tmp.append(VariableMean.group(j))
+                tmp = [VariableMean.group(j) for j in range(1, 6)]
                 table.append(tmp)
             else:
                 break
@@ -150,7 +161,7 @@ class transformTMVAOutputToHTML:
         for i in xrange(len(table)):
             rstr += "<tr>"
             for j in xrange(len(table[i])):
-                rstr += "<td>" + str(table[i][j])
+                rstr += f'<td>{str(table[i][j])}'
             rstr += "<td class='tmva_output_hidden_td'></td>"
             rstr += "</tr>"
         rstr += "</table>"
@@ -163,7 +174,7 @@ class transformTMVAOutputToHTML:
     # @param varNames array with variable names
     # @param matrix the correlation matrix
     def __correlationMatrix(self, title, className, varNames, matrix):
-        id = "jsmva_outputtansformer_events_"+str(self.__eventsUID)+"_onclick"
+        id = f'jsmva_outputtansformer_events_{str(self.__eventsUID)}_onclick'
         self.__eventsUID += 1
         json = DataLoader.GetCorrelationMatrixInJSON(className, varNames, matrix)
         jsCall = "require(['JsMVA'],function(jsmva){jsmva.outputShowCorrelationMatrix('"+id+"');});"
@@ -175,7 +186,7 @@ class transformTMVAOutputToHTML:
     # @param self object pointer
     # @param line current line
     def addClassForOutputFlag(self, line):
-        if self.__currentType==None:
+        if self.__currentType is None:
             self.__outputFlagClass = ""
             if line.find("\033[1;31m") != -1:
                 self.__outputFlagClass = " class='tmva_output_warning'"

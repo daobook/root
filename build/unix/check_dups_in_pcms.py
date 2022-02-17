@@ -19,9 +19,7 @@ infiles = args.pcmfiles
 pcmfiles = []
 
 for globname in infiles:
-    for pcmfile in glob.glob(globname):
-        pcmfiles.append(pcmfile)
-
+    pcmfiles.extend(iter(glob.glob(globname)))
 ROOTCLING_BINARY = os.path.join(ROOTSYS, "bin", "rootcling")
 
 headerdict = {}
@@ -42,7 +40,7 @@ for pcmfile in pcmfiles:
     for line in rootcling_output.split("\n"):
         if "Input file:" in line:
             line = line[line.find("Input file:") + len("Input file:") :]
-            if "[" and "]" in line:
+            if "]" in line:
                 line = line[: line.rfind("[")]
             line = line.strip()
             HEADERS_IN_PCM.append(line)
@@ -55,10 +53,10 @@ for pcmfile in pcmfiles:
 headerpath = []
 def shorten_path(filename):
     dirname = os.path.dirname(filename)
-    for i in range(0, 3):
+    for _ in range(3):
         dirname = os.path.dirname(dirname)
     # Do not shorten if the path has less than 3 components
-    if dirname == '/' or dirname == '':
+    if dirname in ['/', '']:
         return filename
 
     if dirname not in headerpath:

@@ -236,9 +236,8 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
          self.match_many = match_many_getters
          if not (self.match_many or prop_name):
             raise ValueError("If not matching properties by regex, need a property name with exactly one substitution field")
-         if self.match_many and prop_name:
-            if prop_name.format(').!:(') == prop_name:
-               raise ValueError("If matching properties by regex and providing a property name, the name needs exactly one substitution field")
+         if self.match_many and prop_name and prop_name.format(').!:(') == prop_name:
+            raise ValueError("If matching properties by regex and providing a property name, the name needs exactly one substitution field")
 
          self.prop_name = prop_name
 
@@ -344,11 +343,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                fdel = None
 
             new_prop = property(fget, fset, fdel)
-            if self.prop_name:
-               prop_name = self.prop_name.format(name)
-            else:
-               prop_name = name
-
+            prop_name = self.prop_name.format(name) if self.prop_name else name
             setattr(obj, prop_name, new_prop)
 
    return property_pythonizor(match_class, match_get, match_set, match_del, prop_name)

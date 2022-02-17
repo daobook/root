@@ -42,11 +42,7 @@ class CppHighlighter(Preprocessor):
         self.re_magic_language = re.compile(r"^\s*({0}).*".format(any_magic), re.DOTALL)
 
     def matches(self, source, reg_expr):
-        m = reg_expr.match(source)
-        if m:
-            return True
-        else:
-            return False
+        return bool(m := reg_expr.match(source))
 
     def _preprocess_cell_python(self, cell, resources, cell_index):
         # Mark %%cpp and %%dcl code cells as cpp

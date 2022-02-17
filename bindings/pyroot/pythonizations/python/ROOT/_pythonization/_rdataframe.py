@@ -69,9 +69,9 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
         columns = [str(c) for c in df.GetColumnNames()]
 
     # Exclude the specified columns
-    if exclude == None:
+    if exclude is None:
         exclude = []
-    columns = [col for col in columns if not col in exclude]
+    columns = [col for col in columns if col not in exclude]
 
     # Register Take action for each column
     result_ptrs = {}
@@ -81,10 +81,7 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
 
     result = AsNumpyResult(result_ptrs, columns)
 
-    if lazy:
-        return result
-    else:
-        return result.GetValue()
+    return result if lazy else result.GetValue()
 
 
 class AsNumpyResult(object):
@@ -133,13 +130,11 @@ class AsNumpyResult(object):
                 cpp_reference = self._result_ptrs[column].GetValue()
                 if hasattr(cpp_reference, "__array_interface__"):
                     tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
-                    self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
                 else:
                     tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
                     for i, x in enumerate(cpp_reference):
                         tmp[i] = x # This creates only the wrapping of the objects and does not copy.
-                    self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
-
+                self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
         return self._py_arrays
 
     def Merge(self, other):
@@ -166,7 +161,7 @@ class AsNumpyResult(object):
         except ImportError:
             raise ImportError("Failed to import numpy while merging two 'AsNumpyResult' instances.")
 
-        if not self._py_arrays.keys() == other._py_arrays.keys():
+        if self._py_arrays.keys() != other._py_arrays.keys():
             raise ValueError("The two dictionary of numpy arrays have different keys.")
 
         self._py_arrays = {
@@ -215,18 +210,14 @@ def _histo_profile(self, fixed_args, *args):
         model = model_class(*args[0])
         # Call the original implementation of the method
         # with the model as first argument
-        if len(args) > 1:
-            res = original_method(model, *args[1:])
-        else:
-            # Covers the case of the overloads with only model passed
-            # as argument
-            res = original_method(model)
-    # If the first argument is not a tuple, nothing to do, just call
-    # the original implementation
-    else:
-        res = original_method(*args)
+        return (
+            original_method(model, *args[1:])
+            if len(args) > 1
+            else original_method(model)
+        )
 
-    return res
+    else:
+        return original_method(*args)
 
 
 @pythonization("RInterface<", ns="ROOT::RDF", is_prefix=True)
@@ -253,7 +244,7 @@ def pythonize_rdataframe(klass):
     # klass._OriginalHisto1D = klass.Histo1D
     # klass.Histo1D = TH1DModel
     for method_name, model_class in methods_with_TModel.items():
-        original_method_name = '_Original' + method_name
+        original_method_name = f'_Original{method_name}'
         setattr(klass, original_method_name, getattr(klass, method_name))
         # Fixed arguments to construct a partialmethod
         fixed_args = (original_method_name, model_class)

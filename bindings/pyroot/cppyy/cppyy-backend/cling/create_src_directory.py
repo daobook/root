@@ -76,8 +76,7 @@ def get_root_version(try_recover=True):
     #
     parts = version.split('.', 3)
     major, minor, patch = map(int, parts[:3])
-    root_version = '%d.%02d.%02d' % (major, minor, patch)
-    return root_version
+    return '%d.%02d.%02d' % (major, minor, patch)
 
 
 ROOT_VERSION = get_root_version()
@@ -105,19 +104,18 @@ def clean_directory(directory, keeplist, trim_cmake=True):
     inp = os.path.join(directory, 'CMakeLists.txt')
     if removed_entries and os.path.exists(inp):
         print('trimming', inp)
-        outp = inp+'.new'
-        new_cml = open(outp, 'w')
-        for line in open(inp).readlines():
-            if ('add_subdirectory' in line) or\
-               ('COMMAND' in line and 'copy' in line) or\
-               ('ROOT_ADD_TEST_SUBDIRECTORY' in line) or\
-               ('install(DIRECTORY' in line):
-                for sub in removed_entries:
-                    if sub in line:
-                        line = '#'+line
-                        break
-            new_cml.write(line)
-        new_cml.close()
+        outp = f'{inp}.new'
+        with open(outp, 'w') as new_cml:
+            for line in open(inp).readlines():
+                if  ('add_subdirectory' in line) or\
+                ('COMMAND' in line and 'copy' in line) or\
+                ('ROOT_ADD_TEST_SUBDIRECTORY' in line) or\
+                ('install(DIRECTORY' in line):
+                    for sub in removed_entries:
+                        if sub in line:
+                            line = f'#{line}'
+                            break
+                new_cml.write(line)
         rename(outp, inp)
     else:
         print('reusing existing %s/CMakeLists.txt' % (directory,))

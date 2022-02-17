@@ -187,12 +187,9 @@ def commentRemover( text ):
    def blotOutNonNewlines( strIn ) :  # Return a string containing only the newline chars contained in strIn
       return "" + ("\n" * strIn.count('\n'))
 
-   def replacer( match ) :
+   def replacer( match ):
       s = match.group(0)
-      if s.startswith('/'):  # Matched string is //...EOL or /*...*/  ==> Blot out all non-newline chars
-         return blotOutNonNewlines(s)
-      else:                  # Matched string is '...' or "..."  ==> Keep unchanged
-         return s
+      return blotOutNonNewlines(s) if s.startswith('/') else s
 
    pattern = re.compile(\
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
@@ -249,7 +246,7 @@ def _invokeAclicMac(fileName):
     ROOT.gSystem.Load(libNameBase)
 
 def _codeToFilename(code):
-    '''Convert code to a unique file name
+   '''Convert code to a unique file name
 
     >>> code = "int f(i){return i*i;}"
     >>> _codeToFilename(code)[0:9]
@@ -259,10 +256,10 @@ def _codeToFilename(code):
     >>> _codeToFilename(code)[-2:]
     '.C'
     '''
-    code_enc = code if type(code) == bytes else code.encode('utf-8')
-    fileNameBase = sha1(code_enc).hexdigest()[0:8]
-    timestamp = datetime.now().strftime("%H%M%S%f")
-    return fileNameBase + "_" + timestamp + ".C"
+   code_enc = code if type(code) == bytes else code.encode('utf-8')
+   fileNameBase = sha1(code_enc).hexdigest()[:8]
+   timestamp = datetime.now().strftime("%H%M%S%f")
+   return f'{fileNameBase}_{timestamp}.C'
 
 def _dumpToUniqueFile(code):
     '''Dump code to file whose name is unique
@@ -305,10 +302,7 @@ def produceCanvasJson(canvas):
    else:
       prim.Add(style)
 
-   cnt = 0
-   for n in range(colors.GetLast()+1):
-      if colors.At(n): cnt = cnt+1
-
+   cnt = sum(1 for n in range(colors.GetLast()+1) if colors.At(n))
    # add all colors if there are more than 598 colors defined
    if cnt < 599 or prim.FindObject(colors):
       colors = None
@@ -417,23 +411,21 @@ def GetRCanvasDrawers():
     return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown()]
 
 def GetGeometryDrawer():
-    if not hasattr(ROOT,'gGeoManager'): return
-    if not ROOT.gGeoManager: return
-    if not ROOT.gGeoManager.GetUserPaintVolume(): return
-    vol = ROOT.gGeoManager.GetTopVolume()
-    if vol:
-        return NotebookDrawer(vol)
+   if not hasattr(ROOT,'gGeoManager'): return
+   if not ROOT.gGeoManager: return
+   if not ROOT.gGeoManager.GetUserPaintVolume(): return
+   if vol := ROOT.gGeoManager.GetTopVolume():
+      return NotebookDrawer(vol)
 
 def GetDrawers():
-    drawers = GetCanvasDrawers() + GetRCanvasDrawers()
-    geometryDrawer = GetGeometryDrawer()
-    if geometryDrawer: drawers.append(geometryDrawer)
-    return drawers
+   drawers = GetCanvasDrawers() + GetRCanvasDrawers()
+   if geometryDrawer := GetGeometryDrawer():
+      drawers.append(geometryDrawer)
+   return drawers
 
 def DrawGeometry():
-    drawer = GetGeometryDrawer()
-    if drawer:
-        drawer.Draw()
+   if drawer := GetGeometryDrawer():
+      drawer.Draw()
 
 def DrawCanvases():
     drawers = GetCanvasDrawers()
@@ -522,35 +514,34 @@ class NotebookDrawer(object):
         return True
 
     def _getJsCode(self):
-        # produce JSON for the canvas
-        if self.isRCanvas:
-            json = self.drawableObject.CreateJSON()
-        else:
-            json = produceCanvasJson(self.drawableObject).Data()
+       # produce JSON for the canvas
+       if self.isRCanvas:
+           json = self.drawableObject.CreateJSON()
+       else:
+           json = produceCanvasJson(self.drawableObject).Data()
 
         # Here we could optimise the string manipulation
-        divId = 'root_plot_' + str(self._getUID())
+       divId = f'root_plot_{str(self._getUID())}'
 
-        height = _jsCanvasHeight
-        width = _jsCanvasHeight
-        options = "all"
+       height = _jsCanvasHeight
+       width = _jsCanvasHeight
+       options = "all"
 
-        if self.isCanvas:
-            height = self.drawableObject.GetWw()
-            width = self.drawableObject.GetWh()
-            options = ""
+       if self.isCanvas:
+           height = self.drawableObject.GetWw()
+           width = self.drawableObject.GetWh()
+           options = ""
 
-        if self.isRCanvas:
-            if (self.drawableObject.GetWidth() > 0): width = self.drawableObject.GetWidth()
-            if (self.drawableObject.GetHeight() > 0): height = self.drawableObject.GetHeight()
-            options = ""
+       if self.isRCanvas:
+           if (self.drawableObject.GetWidth() > 0): width = self.drawableObject.GetWidth()
+           if (self.drawableObject.GetHeight() > 0): height = self.drawableObject.GetHeight()
+           options = ""
 
-        thisJsCode = _jsCode.format(jsCanvasWidth = height,
+       return _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
                                     jsonContent = json,
                                     jsDrawOptions = options,
                                     jsDivId = divId)
-        return thisJsCode
 
     def _getJsDiv(self):
         return HTML(self._getJsCode())
@@ -576,23 +567,19 @@ class NotebookDrawer(object):
        if _enableJSVisDebug:
           self._pngDisplay()
           self._jsDisplay()
+       elif self._canJsDisplay():
+          self._jsDisplay()
        else:
-         if self._canJsDisplay():
-            self._jsDisplay()
-         else:
-            self._pngDisplay()
+          self._pngDisplay()
 
     def GetDrawableObjects(self):
-        if not self.isCanvas:
-           return [self._getJsDiv()]
+       if not self.isCanvas:
+          return [self._getJsDiv()]
 
-        if _enableJSVisDebug:
-           return [self._getJsDiv(),self._getPngImage()]
+       if _enableJSVisDebug:
+          return [self._getJsDiv(),self._getPngImage()]
 
-        if self._canJsDisplay():
-           return [self._getJsDiv()]
-        else:
-           return [self._getPngImage()]
+       return [self._getJsDiv()] if self._canJsDisplay() else [self._getPngImage()]
 
     def Draw(self):
         self._display()
@@ -605,16 +592,16 @@ def setStyle():
 captures = []
 
 def loadMagicsAndCapturers():
-    global captures
-    extNames = ["JupyROOT.magics." + name for name in ["cppmagic","jsrootmagic"]]
-    ip = get_ipython()
-    extMgr = ExtensionManager(ip)
-    for extName in extNames:
-        extMgr.load_extension(extName)
-    captures.append(StreamCapture())
-    captures.append(CaptureDrawnPrimitives())
+   global captures
+   extNames = [f'JupyROOT.magics.{name}' for name in ["cppmagic","jsrootmagic"]]
+   ip = get_ipython()
+   extMgr = ExtensionManager(ip)
+   for extName in extNames:
+       extMgr.load_extension(extName)
+   captures.append(StreamCapture())
+   captures.append(CaptureDrawnPrimitives())
 
-    for capture in captures: capture.register()
+   for capture in captures: capture.register()
 
 def declareProcessLineWrapper():
     ROOT.gInterpreter.Declare("""

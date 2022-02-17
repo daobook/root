@@ -61,10 +61,7 @@ class IOHandler(object):
 
     def Decode(self, obj):
         import sys
-        if sys.version_info >= (3, 0):
-            return obj.decode('utf-8')
-        else:
-            return obj
+        return obj.decode('utf-8') if sys.version_info >= (3, 0) else obj
 
     def GetStdout(self):
        return self.Decode(_lib.JupyROOTExecutorHandler_GetStdout())
@@ -143,8 +140,7 @@ class Runner(object):
         while self.is_running: pass
 
     def HasFinished(self):
-        if self.is_running: return False
-        return True
+        return not self.is_running
 
     def Stop(self):
         self.Wait()

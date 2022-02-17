@@ -123,8 +123,7 @@ def initialise(pkg, lib_file, map_file, noisy=False):
             }
 
             op = name[8:]
-            result = gC2POperatorMapping.get(op, None)
-            if result:
+            if result := gC2POperatorMapping.get(op, None):
                 return result
 
             bTakesParams = 1

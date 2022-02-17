@@ -58,7 +58,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
             self.assertEqual(sc[i], slice1[i])
 
         # First two items
-        slice2 = sc[0:2]
+        slice2 = sc[:2]
         self.assertEqual(sc[0], slice2[0])
         self.assertEqual(sc[1], slice2[1])
 
@@ -68,7 +68,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         self.assertEqual(sc[2], slice3[1])
 
         # First and third items
-        slice4 = sc[0::2]
+        slice4 = sc[::2]
         self.assertEqual(sc[0], slice4[0])
         self.assertEqual(sc[2], slice4[1])
 
@@ -136,7 +136,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         # Append items
         sc1 = self.create_tseqcollection()
-        l = [ elem for elem in sc1 ]
+        l = list(sc1)
 
         sc1[self.num_elems:] = sc2
 
@@ -153,7 +153,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # This time use a Python list as assigned value
         sc3 = self.create_tseqcollection()
         l2 = [ ROOT.TObject() ]
-        l3 = [ elem for elem in sc3 ]
+        l3 = list(sc3)
 
         sc3[1:2] = l2
 
@@ -166,7 +166,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # This tests that the third item is removed
         sc4 = self.create_tseqcollection()
         l4 = [ ROOT.TObject() ]
-        l5 = [ elem for elem in sc4 ]
+        l5 = list(sc4)
 
         sc4[1:3] = l4
 
@@ -246,7 +246,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         # Do not delete anything (slice out of range)
         sc2 = self.create_tseqcollection()
-        l2 = [ elem for elem in sc2 ]
+        l2 = list(sc2)
         del sc2[self.num_elems:]
         self.assertEqual(sc2.GetEntries(), self.num_elems)
         for el1, el2 in zip(sc2, l2):

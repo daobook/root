@@ -26,10 +26,10 @@ class RooCollectionPrinter(object):
       try:
          for name,val in self.viz.children():
             itemName = val.referenced_value()['fName']
-            ret += str(itemName) + ","
+            ret += f'{str(itemName)},'
       except:
-         ret += "<exception " + str(sys.exc_info()[0]) + ">,"
-            
+         ret += f'<exception {str(sys.exc_info()[0])}>,'
+
       ret += "}"
       return ret
       
@@ -37,7 +37,7 @@ class RooCollectionPrinter(object):
       for name,val in self.viz.children():
          try:
             itemName = val.referenced_value()['fName']
-            key = name + " " + str(val.address) + " (" + str(val.dynamic_type) +") " + str(itemName)
+            key = f'{name} {str(val.address)} ({str(val.dynamic_type)}) {str(itemName)}'
             yield key, val.referenced_value()
          except:
 #            print("<exception " + str(sys.exc_info()[0]) + ">,")
@@ -59,10 +59,9 @@ class RooSpanPrinter(object):
       
    def children(self):
       length = self.val['_span']['length_']
-      values = ""
-      for i in range(0, min(length, 10)):
-         values += ' ' + str((self.val['_span']['data_']+i).dereference())
-      yield 'Values', values + '...'
+      values = "".join(' ' + str((self.val['_span']['data_'] + i).dereference())
+                       for i in range(min(length, 10)))
+      yield ('Values', f'{values}...')
 
    def display_hint(self):
       return 'RooSpan printer'
@@ -76,11 +75,10 @@ class RooAbsArgPrinter(object):
       self.val = val
       
    def children(self):
-      for name,item in self.val.fields():
-         yield name, item
+      yield from self.val.fields()
 
    def to_string(self):
-      ret += str(self.val.address) + " " + str(self.val.dynamic_type)
+      ret += f'{str(self.val.address)} {str(self.val.dynamic_type)}'
       itemName = self.val['fName']
       ret += " = { <fName> = {" + str(itemName) + "} }"
       return ret

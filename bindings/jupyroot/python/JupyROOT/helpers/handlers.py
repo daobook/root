@@ -26,7 +26,7 @@ from JupyROOT import helpers
 
 # import libJupyROOT with Python version number
 import importlib
-major, minor = sys.version_info[0:2]
+major, minor = sys.version_info[:2]
 libjupyroot_mod_name = 'libJupyROOT{}_{}'.format(major, minor)
 _lib = importlib.import_module(libjupyroot_mod_name)
 

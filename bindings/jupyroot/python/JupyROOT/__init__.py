@@ -13,7 +13,7 @@
 
 import sys
 from JupyROOT.helpers import utils
-if not 'win32' in sys.platform:
+if 'win32' not in sys.platform:
     from JupyROOT.helpers import cppcompleter
 
 # Check if we are in the IPython shell
@@ -21,10 +21,8 @@ try:
     import builtins
 except ImportError:
     import __builtin__ as builtins # Py2
-_is_ipython = hasattr(builtins, '__IPYTHON__')
-
-if _is_ipython:
-    if not 'win32' in sys.platform:
+if _is_ipython := hasattr(builtins, '__IPYTHON__'):
+    if 'win32' not in sys.platform:
         from IPython import get_ipython
         cppcompleter.load_ipython_extension(get_ipython())
     utils.iPythonize()

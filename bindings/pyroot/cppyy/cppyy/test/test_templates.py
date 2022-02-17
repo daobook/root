@@ -21,32 +21,24 @@ class TestTEMPLATES:
         import cppyy
 
         m = cppyy.gbl.MyTemplatedMethodClass()
-
       # implicit (called before other tests to check caching)
         assert m.get_size(1)          == m.get_int_size()+1
         assert 'get_size<int>' in dir(cppyy.gbl.MyTemplatedMethodClass)
-
       # pre-instantiated
         assert m.get_size['char']()   == m.get_char_size()
         assert m.get_size[int]()      == m.get_int_size()
-
       # specialized
-        if sys.hexversion >= 0x3000000:
-            targ = 'long'
-        else:
-            targ = long
+        targ = 'long' if sys.hexversion >= 0x3000000 else long
         assert m.get_size[targ]()     == m.get_long_size()
 
         import ctypes
         assert m.get_size(ctypes.c_double(3.14)) == m.get_size['double']()
         assert m.get_size(ctypes.c_double(3.14).value) == m.get_size['double']()+1
-
       # auto-instantiation
         assert m.get_size[float]()    == m.get_float_size()
         assert m.get_size['double']() == m.get_double_size()
         assert m.get_size['MyTemplatedMethodClass']() == m.get_self_size()
         assert 'get_size<MyTemplatedMethodClass>' in dir(cppyy.gbl.MyTemplatedMethodClass)
-
       # auto through typedef
         assert m.get_size['MyTMCTypedef_t']() == m.get_self_size()
         assert 'get_size<MyTMCTypedef_t>' in dir(cppyy.gbl.MyTemplatedMethodClass)
@@ -594,19 +586,19 @@ class TestTEMPLATED_TYPEDEFS:
             in_type = tct[argname, dum, 4].in_type
             assert issubclass(in_type, int)
             assert in_type(13) == 13
-            assert 2*in_type(42) - 84 == 0
+            assert in_type(42) == 42
 
         for argname in ['unsigned int', 'long', 'unsigned long']:# TODO: 'long long', 'unsigned long long'
             in_type = tct[argname, dum, 4].in_type
             assert issubclass(in_type, pylong)
             assert in_type(13) == 13
-            assert 2*in_type(42) - 84 == 0
+            assert in_type(42) == 42
 
         for argname in ['float', 'double', 'long double']:
             in_type = tct[argname, dum, 4].in_type
             assert issubclass(in_type, float)
             assert in_type(13) == 13.
-            assert 2*in_type(42) - 84. == 0.
+            assert 2*in_type(42) == 0. + 84.
 
         raises(TypeError, tct.__getitem__, 'gibberish', dum, 4)
 

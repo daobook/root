@@ -93,7 +93,7 @@ class my_build_cpplib(_build_ext):
         output_dir = os.path.dirname(ext_path)
         libname_base = 'libcppyy_backend'
         libname = libname_base+self.compiler.shared_lib_extension
-        extra_postargs = list()
+        extra_postargs = []
         if 'linux' in sys.platform:
             extra_postargs.append('-Wl,-Bsymbolic-functions')
         elif 'win32' in sys.platform:
@@ -134,12 +134,11 @@ class my_clean(_clean):
 
 class my_install(_install):
     def _get_install_path(self):
-        # depending on goal, copy over pre-installed tree
-        if hasattr(self, 'bdist_dir') and self.bdist_dir:
-            install_path = self.bdist_dir
-        else:
-            install_path = self.install_lib
-        return install_path
+        return (
+            self.bdist_dir
+            if hasattr(self, 'bdist_dir') and self.bdist_dir
+            else self.install_lib
+        )
 
     def run(self):
         # base install
@@ -158,9 +157,8 @@ class my_install(_install):
         log.info('Install finished')
 
     def get_outputs(self):
-        outputs = _install.get_outputs(self)
         #outputs.append(os.path.join(self._get_install_path(), 'cppyy_backend'))
-        return outputs
+        return _install.get_outputs(self)
 
 
 cmdclass = {
@@ -185,22 +183,17 @@ if has_wheel:
 #
 class MyDistribution(Distribution):
     def run_commands(self):
-        # pip does not resolve dependencies before building binaries, so unless
-        # packages are installed one-by-one, on old install is used or the build
-        # will simply fail hard. The following is not completely quiet, but at
-        # least a lot less conspicuous.
-        if not is_manylinux() and not force_bdist:
-            disabled = set((
-                'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
-            for cmd in self.commands:
-                if not cmd in disabled:
-                    self.run_command(cmd)
-                else:
-                    log.info('Command "%s" is disabled', cmd)
-                    cmd_obj = self.get_command_obj(cmd)
-                    cmd_obj.get_outputs = lambda: None
-        else:
+        if is_manylinux() or force_bdist:
             return Distribution.run_commands(self)
+        disabled = set((
+            'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
+        for cmd in self.commands:
+            if cmd not in disabled:
+                self.run_command(cmd)
+            else:
+                log.info('Command "%s" is disabled', cmd)
+                cmd_obj = self.get_command_obj(cmd)
+                cmd_obj.get_outputs = lambda: None
 
 
 setup(

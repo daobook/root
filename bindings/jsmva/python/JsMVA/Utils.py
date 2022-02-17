@@ -4,7 +4,4 @@
 #  Utilities module.
 
 import sys
-if sys.version_info >= (3, 0):
-    xrange = range
-else:
-    xrange = xrange
+xrange = range if sys.version_info >= (3, 0) else xrange

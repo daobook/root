@@ -115,8 +115,7 @@ class DistRDataFrameInterface(unittest.TestCase):
         # the RDataFrame head node
         hist.GetValue()
 
-        ranges = emptysourceranges_to_tuples(headnode.build_ranges())
-        return ranges
+        return emptysourceranges_to_tuples(headnode.build_ranges())
 
     def get_ranges_from_tree_rdataframe(self, rdf):
         """
@@ -134,8 +133,7 @@ class DistRDataFrameInterface(unittest.TestCase):
         # the RDataFrame head node
         hist.GetValue()
 
-        ranges = treeranges_to_tuples(headnode.build_ranges())
-        return ranges
+        return treeranges_to_tuples(headnode.build_ranges())
 
     def test_empty_rdataframe_with_number_of_entries(self):
         """
@@ -251,8 +249,8 @@ class DistRDataFrameInterface(unittest.TestCase):
         ROOT.RDataFrame(10).Define("x","rdfentry_").Snapshot(treename2, filename2)
 
         chain = ROOT.TChain()
-        chain.Add(str(filename1 + "/" + treename1))
-        chain.Add(str(filename2 + "/" + treename2))
+        chain.Add(str(f'{filename1}/{treename1}'))
+        chain.Add(str(f'{filename2}/{treename2}'))
 
         rdf = DistRDataFrameInterface.TestDataFrame(chain)
         ranges = self.get_ranges_from_tree_rdataframe(rdf)

@@ -77,7 +77,7 @@ class ROOTKernel(MetaKernel):
 
     def print_output(self, handler):
         streamDicts = handler.GetStreamsDicts()
-        for streamDict in filter(lambda d: None != d, streamDicts):
+        for streamDict in filter(lambda d: d != None, streamDicts):
             self.send_response(self.iopub_socket, 'stream', streamDict)
 
     def do_execute_direct(self, code, silent=False):
@@ -103,16 +103,14 @@ class ROOTKernel(MetaKernel):
         if not silent:
             self.print_output(self.ioHandler)
 
-        traceback = None
         reply = {'status': status,
                 'execution_count': self.execution_count,
                 'payload': [],
                 'user_expressions': {},
                 }
 
-        if status == 'interrupted':
-            pass
-        elif status == 'error':
+        if status == 'error':
+            traceback = None
             err = {
                 'ename': 'ename',
                 'evalue': 'evalue',
@@ -120,9 +118,7 @@ class ROOTKernel(MetaKernel):
             }
             self.send_response(self.iopub_socket, 'error', err)
             reply.update(err)
-        elif status == 'ok':
-            pass
-        else:
+        elif status not in ['interrupted', 'ok']:
             raise ValueError("Invalid status: %r" % status)
 
 

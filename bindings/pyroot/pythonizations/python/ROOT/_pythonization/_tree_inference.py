@@ -74,11 +74,7 @@ def SaveXGBoost(self, xgb_model, key_name, output_path,
         thresholds[thresholds_base + index] = node["split_condition"]
 
         # Find next left (no) and right (yes) node
-        if node["children"][0]["nodeid"] == node["yes"]:
-            yes, no = 1, 0
-        else:
-            yes, no = 0, 1
-
+        yes, no = (1, 0) if node["children"][0]["nodeid"] == node["yes"] else (0, 1)
         # Fill values from the child nodes
         fill_arrays(node["children"][no], 2 * index + 1, inputs_base, thresholds_base)
         fill_arrays(node["children"][yes], 2 * index + 2, inputs_base, thresholds_base)

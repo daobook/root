@@ -50,20 +50,16 @@ def main():
                 def get_basic_cppflags():
                     flags = '-Zc:__cplusplus '
                     if 'STDCXX' in os.environ:
-                        return flags + '/std:c++'+os.environ['STDCXX']
-                    else:
-                        for line in open(rcfg):
-                            if 'cxxversion' in line:
-                                if 'cxx11' in line:
-                                    return flags+'/std:c++11'
-                                elif 'cxx14' in line:
-                                    return flags+'/std:c++14'
-                                elif 'cxx17' in line:
-                                    return flags+'/std:c++17'
-                                else:
-                                    # return flags+'/std:c++latest'
-                                    return flags+'/std:c++14'
-                        raise
+                        return f'{flags}/std:c++' + os.environ['STDCXX']
+                    for line in open(rcfg):
+                        if 'cxxversion' in line:
+                            if 'cxx11' in line:
+                                return f'{flags}/std:c++11'
+                            elif 'cxx14' in line or 'cxx17' not in line:
+                                return f'{flags}/std:c++14'
+                            else:
+                                return f'{flags}/std:c++17'
+                    raise
 
                 if options == '--incdir':
                     print(get_include_dir())

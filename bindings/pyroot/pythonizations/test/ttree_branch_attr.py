@@ -59,7 +59,7 @@ class TTreeBranchAttr(unittest.TestCase):
         nt = f.Get(self.tuplename)
         SetOwnership(nt, False)
 
-        ntd = f.Get(self.tuplename + 'D')
+        ntd = f.Get(f'{self.tuplename}D')
         SetOwnership(ntd, False)
 
         # Read first entry

@@ -25,7 +25,7 @@ class TObjectComparisonOps(unittest.TestCase):
         self.assertFalse(o == 1)
 
         # Test comparison with None
-        self.assertFalse(o == None)
+        self.assertFalse(o is None)
 
     def test_ne(self):
         o = ROOT.TObject()

@@ -49,7 +49,7 @@ class TestREGRESSION:
 
         import cppyy, pydoc
 
-        assert not '__abstractmethods__' in dir(cppyy.gbl.gInterpreter)
+        assert '__abstractmethods__' not in dir(cppyy.gbl.gInterpreter)
         assert '__class__' in dir(cppyy.gbl.gInterpreter)
 
         self.__class__.helpout = []
@@ -61,12 +61,12 @@ class TestREGRESSION:
 
         cppyy.cppdef("namespace cppyy_regression_test { void iii() {}; }")
 
-        assert not 'iii' in cppyy.gbl.cppyy_regression_test.__dict__
-        assert not '__abstractmethods__' in dir(cppyy.gbl.cppyy_regression_test)
+        assert 'iii' not in cppyy.gbl.cppyy_regression_test.__dict__
+        assert '__abstractmethods__' not in dir(cppyy.gbl.cppyy_regression_test)
         assert '__class__' in dir(cppyy.gbl.cppyy_regression_test)
         assert 'iii' in dir(cppyy.gbl.cppyy_regression_test)
 
-        assert not 'iii' in cppyy.gbl.cppyy_regression_test.__dict__
+        assert 'iii' not in cppyy.gbl.cppyy_regression_test.__dict__
         assert cppyy.gbl.cppyy_regression_test.iii
         assert 'iii' in cppyy.gbl.cppyy_regression_test.__dict__
 
@@ -169,7 +169,7 @@ class TestREGRESSION:
 
         assert PyABC.S2.S1_coll
         assert 'S1_coll' in dir(PyABC.S2)
-        assert not 'vector<const PyABC::S1*>' in dir(PyABC.S2)
+        assert 'vector<const PyABC::S1*>' not in dir(PyABC.S2)
         assert PyABC.S2.S1_coll is cppyy.gbl.std.vector('const PyABC::S1*')
 
     def test08_gil_not_released(self):
@@ -398,9 +398,7 @@ class TestREGRESSION:
         c_iterable = Color()
         assert c_iterable.begin().__deref__() == 1
 
-        all_enums = []
-        for c in c_iterable:
-            all_enums.append(int(c))
+        all_enums = [int(c) for c in c_iterable]
         assert all_enums == list(range(1, 5))
 
     def test16_operator_eq_pickup(self):
@@ -459,13 +457,7 @@ class TestREGRESSION:
         import cppyy
 
         s = cppyy.gbl.std.string("text")
-        d = {}
-
-      # hashes of std::string larger than 2**31 would fail; run a couple of
-      # strings to check although it may still succeed by accident (and never
-      # was an issue on p3 anyway)
-        for s in ['abc', 'text', '321', 'stuff', 'very long string']:
-            d[s] = 1
+        d = {s: 1 for s in ['abc', 'text', '321', 'stuff', 'very long string']}
 
     def test19_signed_char_ref(self):
         """Signed char executor was self-referencing"""
@@ -494,7 +486,7 @@ class TestREGRESSION:
             std::vector<std::string> get_some_temporary_vector() { return { "x", "y", "z" }; }
         """)
 
-        l = [e for e in cppyy.gbl.get_some_temporary_vector()]
+        l = list(cppyy.gbl.get_some_temporary_vector())
         assert l == ['x', 'y', 'z']
 
     def test21_initializer_list_and_temporary(self):

@@ -52,7 +52,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
 
     def test_pop(self):
         sc = self.create_tseqcollection()
-        l = [ elem for elem in sc ]
+        l = list(sc)
 
         # No arguments, pop last item
         self.assertEqual(sc.pop(), l[-1])
@@ -90,7 +90,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
 
     def test_reverse(self):
         sc = self.create_tseqcollection()
-        l = [ elem for elem in sc ]
+        l = list(sc)
 
         sc.reverse()
 
@@ -105,7 +105,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
 
     def test_sort(self):
         sc = self.create_tseqcollection()
-        l = [ elem for elem in sc ]
+        l = list(sc)
 
         # Regular sort, rely on TList::Sort
         sc.sort()
@@ -121,7 +121,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
         # Python sort, key and reverse arguments.
         # Sort by hash in reverse order
         sc2 = self.create_tseqcollection()
-        l2 = [ elem for elem in sc2 ]
+        l2 = list(sc2)
 
         fsort = lambda elem: elem.Hash()
         rev = True

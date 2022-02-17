@@ -31,9 +31,8 @@ class TestRooAbsCollection(unittest.TestCase):
 
     def _test_addowned(self, collection_class):
         coll = collection_class()
-        if True:
-            x = ROOT.RooRealVar("x", "x", -10, 10)
-            coll.addOwned(x)
+        x = ROOT.RooRealVar("x", "x", -10, 10)
+        coll.addOwned(x)
         self.assertTrue("x" in coll)
 
     def _test_iterator(self, collection_class):
@@ -64,17 +63,17 @@ class TestRooAbsCollection(unittest.TestCase):
         self.assertTrue(var0 in coll)
         self.assertTrue("var0" in coll)
 
-        self.assertTrue(not var1 in coll)
-        self.assertTrue(not "var1" in coll)
+        self.assertTrue(var1 not in coll)
+        self.assertTrue("var1" not in coll)
 
         self.assertTrue(var2 in coll)
-        self.assertTrue(not "var2" in coll)
+        self.assertTrue("var2" not in coll)
 
         # ensure consistency with RooAbsCollection::find
         variables = [var0, var1, var2]
 
         for i, vptr in enumerate(variables):
-            vname = "var" + str(i)
+            vname = f'var{str(i)}'
             self.assertEqual(coll.find(vptr) == vptr, vptr in coll)
             self.assertEqual(coll.find(vname) == vptr, vname in coll)
 

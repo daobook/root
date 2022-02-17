@@ -183,7 +183,7 @@ class RooDataSet(object):
         if compute_derived_weight:
             try:
                 wgt_var_name = self.weightVar().GetName()
-                if not wgt_var_name in data:
+                if wgt_var_name not in data:
                     weight_array = np.zeros(self.numEntries(), dtype=np.float64)
                     for i in range(self.numEntries()):
                         self.get(i)
@@ -222,9 +222,7 @@ class RooDataSet(object):
         """
         import ROOT
 
-        data = {}
-        for column in df:
-            data[column] = df[column].values
+        data = {column: df[column].values for column in df}
         return ROOT.RooDataSet.from_numpy(data, variables=variables, name=name, title=title, weight_name=weight_name, clip_to_limits=clip_to_limits)
 
     def to_pandas(self, compute_derived_weight=False):

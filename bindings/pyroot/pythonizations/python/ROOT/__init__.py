@@ -20,13 +20,13 @@ environ['CPPYY_API_PATH'] = 'none'
 environ['CPPYY_NO_ROOT_FILTER'] = '1'
 
 import cppyy
-if not 'ROOTSYS' in environ:
+if 'ROOTSYS' not in environ:
     # Revert setting made by cppyy
     cppyy.gbl.gROOT.SetBatch(False)
 
 # import libROOTPythonizations with Python version number
 import sys, importlib
-major, minor = sys.version_info[0:2]
+major, minor = sys.version_info[:2]
 librootpyz_mod_name = 'libROOTPythonizations{}_{}'.format(major, minor)
 importlib.import_module(librootpyz_mod_name)
 

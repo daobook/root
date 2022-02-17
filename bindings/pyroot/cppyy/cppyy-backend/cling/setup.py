@@ -108,14 +108,14 @@ class my_cmake_build(_build):
             else:
                 stdcxx = '17'
 
-        if not stdcxx in ['11', '14', '17']:
+        if stdcxx not in ['11', '14', '17']:
             log.fatal('FATAL: envar STDCXX should be one of 11, 14, or 17')
             sys.exit(1)
 
-        stdcxx='-DCMAKE_CXX_STANDARD='+stdcxx
+        stdcxx = f'-DCMAKE_CXX_STANDARD={stdcxx}'
 
         # extra optimization flags for Cling
-        if not 'EXTRA_CLING_ARGS' in os.environ:
+        if 'EXTRA_CLING_ARGS' not in os.environ:
             has_avx = False
             if not is_manylinux():
                 try:
@@ -139,7 +139,7 @@ class my_cmake_build(_build):
                 '-Dbuiltin_pcre=ON', '-Dbuiltin_freetype=ON', '-Dbuiltin_zlib=ON', '-Dbuiltin_xxhash=ON']
         if 'darwin' in sys.platform:
             CMAKE_COMMAND.append('-Dlibcxx=ON')
-        CMAKE_COMMAND.append('-DCMAKE_BUILD_TYPE='+get_build_type())
+        CMAKE_COMMAND.append(f'-DCMAKE_BUILD_TYPE={get_build_type()}')
         if 'win32' in sys.platform:
             import platform
             if '64' in platform.architecture()[0]:
@@ -151,7 +151,7 @@ class my_cmake_build(_build):
                     CMAKE_COMMAND += ["-DFFTW_INCLUDE_DIR={}".format(FFTW_INC), "-DFFTW_LIBRARY={}".format(FFTW_LIB)]
         else:
             CMAKE_COMMAND += ['-Dbuiltin_freetype=OFF']
-        CMAKE_COMMAND.append('-DCMAKE_INSTALL_PREFIX='+prefix)
+        CMAKE_COMMAND.append(f'-DCMAKE_INSTALL_PREFIX={prefix}')
 
         log.info('Running cmake for cppyy-cling: %s', ' '.join(CMAKE_COMMAND))
         if subprocess.call(CMAKE_COMMAND, cwd=builddir) != 0:
@@ -172,9 +172,9 @@ class my_cmake_build(_build):
                 nprocs = multiprocessing.cpu_count()
             build_args = ['--build', '.', '--config', get_build_type(), '--']
             if 'win32' in sys.platform:
-                build_args.append('/maxcpucount:' + str(nprocs))
+                build_args.append(f'/maxcpucount:{str(nprocs)}')
             else:
-                build_args.append('-j' + str(nprocs))
+                build_args.append(f'-j{str(nprocs)}')
         else:
             build_args = env_make.split()
             build_cmd, build_args = build_args[0], build_args[1:]
@@ -205,12 +205,11 @@ class my_clean(_clean):
 
 class my_install(_install):
     def _get_install_path(self):
-        # depending on goal, copy over pre-installed tree
-        if hasattr(self, 'bdist_dir') and self.bdist_dir:
-            install_path = self.bdist_dir
-        else:
-            install_path = self.install_lib
-        return install_path
+        return (
+            self.bdist_dir
+            if hasattr(self, 'bdist_dir') and self.bdist_dir
+            else self.install_lib
+        )
 
     def run(self):
         # base install
@@ -237,45 +236,41 @@ class my_install(_install):
         if subprocess.call([install_cmd] + install_args, cwd=builddir) != 0:
             raise DistutilsSetupError('Failed to install cppyy-cling')
         if env_make: os.putenv("MAKE", env_make)
-
      # remove allDict.cxx.pch as it's not portable (rebuild on first run, see cppyy)
         log.info('removing allDict.cxx.pch')
         os.remove(os.path.join(get_prefix(), 'etc', 'allDict.cxx.pch'))
      # for manylinux, reset the default cxxversion to 17 if no user override
-        if not 'STDCXX' in os.environ and is_manylinux():
+        if 'STDCXX' not in os.environ and is_manylinux():
             log.info('updating root-config to C++17 for manylinux')
             inp = os.path.join(get_prefix(), 'bin', 'root-config')
-            outp = inp+'.new'
-            outfile = open(outp, 'w')
-            for line in open(inp).readlines():
-                if line.find('cxxversionflag=', 0, 15) == 0:
-                    line = 'cxxversionflag="-std=c++1z "\n'
-                elif line.find('features=', 0, 9) == 0:
-                    line = line.replace('cxx11', 'cxx17')
-                outfile.write(line)
-            outfile.close()
+            outp = f'{inp}.new'
+            with open(outp, 'w') as outfile:
+                for line in open(inp).readlines():
+                    if line.find('cxxversionflag=', 0, 15) == 0:
+                        line = 'cxxversionflag="-std=c++1z "\n'
+                    elif line.find('features=', 0, 9) == 0:
+                        line = line.replace('cxx11', 'cxx17')
+                    outfile.write(line)
             os.rename(outp, inp)
             os.chmod(inp, stat.S_IMODE(os.lstat(inp).st_mode) | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
             log.info('updating allCppflags.txt to C++17 for manylinux')
             inp = os.path.join(get_prefix(), 'etc', 'dictpch', 'allCppflags.txt')
-            outp = inp+'.new'
-            outfile = open(outp, 'w')
-            for line in open(inp).readlines():
-                if '-std=' == line[:5]:
-                    line = '-std=c++1z\n'
-                outfile.write(line)
-            outfile.close()
+            outp = f'{inp}.new'
+            with open(outp, 'w') as outfile:
+                for line in open(inp).readlines():
+                    if line[:5] == '-std=':
+                        line = '-std=c++1z\n'
+                    outfile.write(line)
             os.rename(outp, inp)
 
             log.info('updating compiledata.h to C++17 for manylinux')
             inp = os.path.join(get_prefix(), 'include', 'compiledata.h')
-            outp = inp+'.new'
-            outfile = open(outp, 'w')
-            for line in open(inp).readlines():
-                line = line.replace('-std=c++11', '-std=c++1z')
-                outfile.write(line)
-            outfile.close()
+            outp = f'{inp}.new'
+            with open(outp, 'w') as outfile:
+                for line in open(inp).readlines():
+                    line = line.replace('-std=c++11', '-std=c++1z')
+                    outfile.write(line)
             os.rename(outp, inp)
 
         install_path = self._get_install_path()
@@ -322,17 +317,15 @@ if has_wheel:
 #
 class MyDistribution(Distribution):
     def run_commands(self):
-        # disable bdist_egg as it only packages the python code, skipping the build
-        if not is_manylinux():
-            for cmd in self.commands:
-                if cmd != 'bdist_egg':
-                    self.run_command(cmd)
-                else:
-                    log.info('Command "%s" is disabled', cmd)
-                    cmd_obj = self.get_command_obj(cmd)
-                    cmd_obj.get_outputs = lambda: None
-        else:
+        if is_manylinux():
             return Distribution.run_commands(self)
+        for cmd in self.commands:
+            if cmd != 'bdist_egg':
+                self.run_command(cmd)
+            else:
+                log.info('Command "%s" is disabled', cmd)
+                cmd_obj = self.get_command_obj(cmd)
+                cmd_obj.get_outputs = lambda: None
 
 
 setup(

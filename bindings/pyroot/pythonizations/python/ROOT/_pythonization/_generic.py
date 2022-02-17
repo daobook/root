@@ -42,7 +42,7 @@ def pythonize_generic(klass, name):
 
     # Exclude classes which have the method __str__ already defined in C++
     m = getattr(klass, '__str__', None)
-    has_cpp_str = True if m is not None and type(m).__name__ == 'CPPOverload' else False
+    has_cpp_str = m is not None and type(m).__name__ == 'CPPOverload'
 
     # Exclude std::string with its own pythonization from cppyy
     exclude = [ 'std::string' ]

@@ -93,8 +93,7 @@ class SourceProcessor(object):
     def _read(self, source):
         lines = []
         with open(source, "rU") as f:
-            for line in f:
-                lines.append(line)
+            lines.extend(iter(f))
         return lines
 
     def _extract(self, lines, extent):
@@ -134,7 +133,7 @@ def cursor_parents(cursor):
     parents = ""
     parent = cursor.semantic_parent
     while parent and parent.kind != CursorKind.TRANSLATION_UNIT:
-        parents = parent.spelling + "::" + parents
+        parents = f'{parent.spelling}::{parents}'
         parent = parent.semantic_parent
     if parent and not parents:
         return os.path.basename(parent.spelling)
@@ -148,10 +147,7 @@ def item_describe(item, alternate_spelling=None):
     """
     if isinstance(item, str):
         return item
-    if alternate_spelling is None:
-        text = item.spelling
-    else:
-        text = alternate_spelling
+    text = item.spelling if alternate_spelling is None else alternate_spelling
     return "{} on line {} '{}::{}'".format(item.kind.name, item.extent.start.line, cursor_parents(item), text)
 
 
@@ -247,11 +243,7 @@ class CppyyGenerator(object):
             logger.info(_("File {}").format(h_file))
             for include in sorted(set(self.tu.get_includes())):
                 logger.info(_("    #includes {}").format(include.include.name))
-        #
-        # Run through the top level children in the translation unit.
-        #
-        info = self._container_get(self.tu.cursor, [], h_file)
-        return info
+        return self._container_get(self.tu.cursor, [], h_file)
 
     def _container_get(self, container, level, h_file):
         """
@@ -263,15 +255,13 @@ class CppyyGenerator(object):
         :return:                    Info().
         """
         def mark_forward_kinds(kind, definition):
-            has_body = False
-            #
-            # Could this be a forward declaration?
-            #
-            for token in definition.get_tokens():
-                if token.kind == TokenKind.PUNCTUATION and token.spelling == "{":
-                    has_body = True
+            has_body = any(
+                token.kind == TokenKind.PUNCTUATION and token.spelling == "{"
+                for token in definition.get_tokens()
+            )
+
             if not has_body:
-                kind = "forward " + kind
+                kind = f'forward {kind}'
             return kind
 
         if container.kind == CursorKind.CLASS_DECL:
@@ -402,7 +392,7 @@ class CppyyGenerator(object):
         :return:
         """
         access_specifier_text = self.source_processor.unpreprocessed(member.extent)
-        if access_specifier_text in (Q_SIGNALS + ":", "signals:"):
+        if access_specifier_text in (f'{Q_SIGNALS}:', "signals:"):
             return True
         return False
 
@@ -448,19 +438,19 @@ class CppyyGenerator(object):
                 child_info = self._fn_get_parameter(fn, child)
                 parameters_fixup(level, child_info, "type")
                 parameters.append(child_info)
-            elif child.kind in [CursorKind.COMPOUND_STMT, CursorKind.CXX_OVERRIDE_ATTR,
-                                CursorKind.MEMBER_REF, CursorKind.DECL_REF_EXPR, CursorKind.CALL_EXPR,
-                                CursorKind.UNEXPOSED_ATTR, CursorKind.VISIBILITY_ATTR] + TEMPLATE_KINDS:
-                #
-                # Ignore:
-                #
-                #   CursorKind.COMPOUND_STMT: Function body.
-                #   CursorKind.CXX_OVERRIDE_ATTR: The "override" keyword.
-                #   CursorKind.MEMBER_REF, CursorKind.DECL_REF_EXPR, CursorKind.CALL_EXPR: Constructor initialisers.
-                #   TEMPLATE_KINDS: The result type.
-                #
-                pass
-            else:
+            elif (
+                child.kind
+                not in [
+                    CursorKind.COMPOUND_STMT,
+                    CursorKind.CXX_OVERRIDE_ATTR,
+                    CursorKind.MEMBER_REF,
+                    CursorKind.DECL_REF_EXPR,
+                    CursorKind.CALL_EXPR,
+                    CursorKind.UNEXPOSED_ATTR,
+                    CursorKind.VISIBILITY_ATTR,
+                ]
+                + TEMPLATE_KINDS
+            ):
                 CppyyGenerator._report_ignoring(child, "unusable")
         return info
 
@@ -565,7 +555,7 @@ class CppyyGenerator(object):
                     # This is a template parameter.
                     #
                     template_parameters = template_info_stack[0]["parameters"]
-                    for i in range(template_stack_index):
+                    for _ in range(template_stack_index):
                         template_parameters = template_parameters[-1]["parameters"]
                     template_parameters.append(child.spelling)
                     template_count_stack[template_stack_index] -= 1
@@ -638,13 +628,14 @@ def getBuiltinHeaderPath(library_path):
         library_path = os.path.dirname(library_path)
 
     knownPaths = [
-        library_path + "/../lib/clang",     # default value
-        library_path + "/../clang",         # gentoo
-        library_path + "/clang",            # opensuse
-        library_path + "/",                 # Google
-        "/usr/lib64/clang",                 # x86_64 (openSUSE, Fedora)
-        "/usr/lib/clang"
+        f'{library_path}/../lib/clang',
+        f'{library_path}/../clang',
+        f'{library_path}/clang',
+        f'{library_path}/',
+        "/usr/lib64/clang",
+        "/usr/lib/clang",
     ]
+
 
     for path in knownPaths:
         try:
@@ -699,9 +690,9 @@ def main(argv=None):
         flags = []
         for f in args.flags.lstrip().split(";"):
             if f.startswith("\\-\\-"):
-                flags.append("--" + f[4:])
+                flags.append(f'--{f[4:]}')
             elif f.startswith("\\-"):
-                flags.append("-" + f[2:])
+                flags.append(f'-{f[2:]}')
             elif f:
                 flags.append(f)
         #
@@ -709,9 +700,8 @@ def main(argv=None):
         #
         if args.libclang:
             Config.set_library_file(args.libclang)
-            hpath = getBuiltinHeaderPath(args.libclang)
-            if hpath:
-                flags = ['-I'+hpath] + flags
+            if hpath := getBuiltinHeaderPath(args.libclang):
+                flags = [f'-I{hpath}'] + flags
         lib = Config().lib
         import ctypes
         from clang.cindex import Type

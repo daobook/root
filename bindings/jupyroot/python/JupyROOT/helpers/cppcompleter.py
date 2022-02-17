@@ -115,9 +115,7 @@ class CppCompleter(object):
         self.active = False
 
     def _getSuggestions(self,line):
-        if self.active:
-            return self.hook(line)
-        return []
+        return self.hook(line) if self.active else []
 
     def _getLastAccessorPos(self,line):
         accessorPos = -1

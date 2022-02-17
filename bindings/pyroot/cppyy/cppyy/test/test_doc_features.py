@@ -221,7 +221,7 @@ namespace Namespace {
         except TypeError as e:
             assert 'unexpected keyword argument' in str(e)
             caught = True
-        assert caught == True
+        assert caught
 
         kwds = {'n' : 18}
         c = Concrete(**kwds)
@@ -235,8 +235,6 @@ namespace Namespace {
 
     def test_enums(self):
         import cppyy
-
-        pass
 
     def test_functions(self):
         import cppyy
@@ -260,8 +258,6 @@ namespace Namespace {
     def test_inheritance(self):
         import cppyy
 
-        pass
-
     def test_memory(self):
         import cppyy
         from cppyy.gbl import Concrete
@@ -272,12 +268,8 @@ namespace Namespace {
     def test_methods(self):
         import cppyy
 
-        pass
-
     def test_namespaces(self):
         import cppyy
-
-        pass
 
     def test_null(self):
         import cppyy
@@ -294,17 +286,11 @@ namespace Namespace {
     def test_operator_overloads(self):
         import cppyy
         
-        pass
-        
     def test_pointers(self):
         import cppyy
 
-        pass
-
     def test_pyobject(self):
         import cppyy
-
-        pass
 
     def test_ref(self):
         import cppyy
@@ -327,12 +313,8 @@ namespace Namespace {
     def test_static_methods(self):
         import cppyy
 
-        pass
-
     def test_strings(self):
         import cppyy
-
-        pass
 
     def test_templated_classes(self):
         import cppyy
@@ -344,12 +326,8 @@ namespace Namespace {
     def test_templated_functions(self):
         import cppyy
 
-        pass
-
     def test_templated_methods(self):
         import cppyy
-
-        pass
 
     def test_typedefs(self):
         import cppyy
@@ -359,8 +337,6 @@ namespace Namespace {
 
     def test_unary_operators(sef):
         import cppyy
-
-        pass
 
     def test_x_inheritance(self):
         import cppyy
@@ -421,7 +397,7 @@ namespace Namespace {
             assert 'this is an error' in str(e)
             assert e.what() == 'this is an error'
             caught = True
-        assert caught == True
+        assert caught
 
         caught = False
         for exc_type in (cppyy.gbl.SomeOtherError,
@@ -434,8 +410,8 @@ namespace Namespace {
                 cppyy.gbl.DocHelper.throw_an_error(0)
             except exc_type as e:
                  caught = True
-            assert caught == True
-        assert caught == True
+            assert caught
+        assert caught
 
 
 class TestTUTORIALFEATURES:
@@ -851,8 +827,7 @@ class TestADVERTISED:
         create_them(ptr, sz)
 
         arr = cppyy.bind_object(cppyy.addressof(ptr), cppyy.gbl.std.array[SomeStruct, sz.value])
-        total = 0
-        for s in arr: total += s.i
+        total = sum(s.i for s in arr)
         assert total == 14
 
     def test06_c_char_p(self):

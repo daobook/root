@@ -50,9 +50,8 @@ def _TFileConstructor(self, *args):
     # self: instance of TFile class
     # *args: arguments passed to the constructor
     self._OriginalConstructor(*args)
-    if len(args) >= 1:
-        if self.IsZombie():
-            raise OSError('Failed to open file {}'.format(args[0]))
+    if len(args) >= 1 and self.IsZombie():
+        raise OSError('Failed to open file {}'.format(args[0]))
 
 def _TFileOpen(klass, *args):
     # Redefinition of ROOT.TFile.Open(str, ...):

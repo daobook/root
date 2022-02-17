@@ -137,7 +137,7 @@ from . import pythonization
 def _TTree__iter__(self):
     i = 0
     bytes_read = self.GetEntry(i)
-    while 0 < bytes_read:
+    while bytes_read > 0:
         yield self
         i += 1
         bytes_read = self.GetEntry(i)

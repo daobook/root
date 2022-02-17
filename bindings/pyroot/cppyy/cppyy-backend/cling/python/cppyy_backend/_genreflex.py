@@ -4,8 +4,7 @@ import os, sys, subprocess
 MYHOME = os.path.dirname(__file__)
 
 def main():
-    if len(sys.argv) == 2 and \
-           (sys.argv[1] == '--cflags' or sys.argv[1] == '--cppflags'):
+    if len(sys.argv) == 2 and sys.argv[1] in ['--cflags', '--cppflags']:
         print('-I%s/include' % (MYHOME,))
         return 0
     os.environ['LD_LIBRARY_PATH'] = os.path.join(MYHOME, 'lib')
@@ -17,11 +16,11 @@ def main():
 
     from ._get_cppflags import get_cppflags
     extra_flags = get_cppflags()
-    if extra_flags is not None and 1 < len(sys.argv):
+    if extra_flags is not None and len(sys.argv) > 1:
       # genreflex is picky about order ...
-       args = [sys.argv[1], '--cxxflags', extra_flags] + sys.argv[2:]
+        args = [sys.argv[1], '--cxxflags', extra_flags] + sys.argv[2:]
     else:
-       args = sys.argv[1:]
+        args = sys.argv[1:]
 
     return subprocess.call([genreflex] + args)
 

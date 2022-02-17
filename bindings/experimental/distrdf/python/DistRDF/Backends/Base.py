@@ -177,7 +177,7 @@ class BaseBackend(ABC):
 
                 # Get RResultPtrs out of the type-erased RResultHandles by
                 # instantiating with the type of the value
-                mergeables = [
+                return [
                     ROOT.ROOT.Detail.RDF.GetMergeableValue(res.GetResultPtr[res_type]())
                     if isinstance(res, ROOT.RDF.RResultHandle)
                     else res
@@ -187,9 +187,7 @@ class BaseBackend(ABC):
                 # Output of the callable
                 resultptr_list = computation_graph_callable(rdf, current_range.id)
 
-                mergeables = [Utils.get_mergeablevalue(resultptr) for resultptr in resultptr_list]
-
-            return mergeables
+                return [Utils.get_mergeablevalue(resultptr) for resultptr in resultptr_list]
 
         def reducer(mergeables_out, mergeables_in):
             """

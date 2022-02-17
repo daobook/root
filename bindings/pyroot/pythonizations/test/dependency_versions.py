@@ -6,15 +6,7 @@ import sys
 
 
 # Compile list of packages to be ignored in the test
-ignore = []
-
-# Dependencies of distributed RDataFrame are ignored in this test because they
-# are checked through specific build options (`test_distrdf_*`).
-# The dependencies are checked at configuration time so that we know whether the
-# CTest environment would be ready for the tests of the distributed RDF backends
-ignore.append('pyspark')
-ignore.append('dask')
-ignore.append('distributed')
+ignore = ['pyspark', 'dask', 'distributed']
 
 if sys.version_info[0] == 2 and 'ROOTTEST_IGNORE_NUMBA_PY2' in os.environ or \
    sys.version_info[0] == 3 and 'ROOTTEST_IGNORE_NUMBA_PY3' in os.environ:
@@ -41,25 +33,24 @@ class DependencyVersions(unittest.TestCase):
 
         # Check each requirement separately
         path = os.path.join(rootsrc, 'requirements.txt')
-        f = open(path)
-        requirements = pkg_resources.parse_requirements(f)
-        errors = []
-        for requirement in requirements:
-            requirement_str = str(requirement)
-            name = requirement.project_name
-            if name in ignore:
-                print('Ignore dependency {}'.format(requirement_str))
-                continue
-            try:
-                pkg_resources.require(requirement_str)
-            except Exception as e:
-                errors.append(e)
-        f.close()
+        with open(path) as f:
+            requirements = pkg_resources.parse_requirements(f)
+            errors = []
+            for requirement in requirements:
+                requirement_str = str(requirement)
+                name = requirement.project_name
+                if name in ignore:
+                    print('Ignore dependency {}'.format(requirement_str))
+                    continue
+                try:
+                    pkg_resources.require(requirement_str)
+                except Exception as e:
+                    errors.append(e)
         if errors:
             print()
             print('Full path to requirements.txt: {}'.format(path))
             print('Details about not matched dependencies:')
-            print('\n'.join([' - ' + e.report() for e in errors]))
+            print('\n'.join([f' - {e.report()}' for e in errors]))
             raise Exception('Found not matched dependencies declared in the requirements.txt, see test output for details')
 
 

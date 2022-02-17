@@ -10,10 +10,7 @@ def get_cppflags():
         with open(ct_flags) as f:
             all_flags = f.readlines()
         if "std" in os.environ.get("EXTRA_CLING_ARGS", ""):
-            keep = []
-            for flag in all_flags:
-                if not "std" in flag:
-                    keep.append(flag)
+            keep = [flag for flag in all_flags if "std" not in flag]
             all_flags = keep
         extra_flags = " ".join(map(lambda line: line[:-1], all_flags))
     except (OSError, IOError):

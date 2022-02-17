@@ -201,7 +201,7 @@ class TestClassPYTHONIZATION:
         oldcount = Countable.sInstances     # there's eg. one global variable
 
         pz.gime_naked_countable.__creates__ = True
-        for i in range(10):
+        for _ in range(10):
             cnt = pz.gime_naked_countable()
             gc.collect()
             assert Countable.sInstances == oldcount + 1

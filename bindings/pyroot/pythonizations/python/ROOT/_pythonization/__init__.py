@@ -281,7 +281,7 @@ def _find_namespace(ns):
     every_ns = ns.split('::')
     for ns in every_ns:
         ns_vars = vars(ns_obj)
-        if not ns in ns_vars:
+        if ns not in ns_vars:
             return None
         ns_obj = getattr(ns_obj, ns)
 
@@ -300,10 +300,7 @@ def _get_class_name(fqn):
     '''
 
     pos = _find_namespace_end(fqn)
-    if pos < 0: # no namespace found
-        return fqn
-    else:
-        return fqn[pos+2:]
+    return fqn if pos < 0 else fqn[pos+2:]
 
 def _find_namespace_end(fqn):
     '''
@@ -338,6 +335,6 @@ def _register_pythonizations():
     '''
 
     exclude = [ '_rdf_utils' ]
-    for _, module_name, _ in  pkgutil.walk_packages(__path__):
+    for _, module_name, _ in pkgutil.walk_packages(__path__):
         if module_name not in exclude:
-            importlib.import_module(__name__ + '.' + module_name)
+            importlib.import_module(f'{__name__}.{module_name}')

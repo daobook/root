@@ -32,7 +32,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         columns = (x, myweight)
 
         data = ROOT.RooDataSet("data", "data", columns, WeightVar=myweight)
-        for j in range(100):
+        for _ in range(100):
             x.setVal(np.random.normal())
             myweight.setVal(10 + np.random.normal())
             data.add(columns, myweight.getVal())

@@ -23,7 +23,7 @@ def build_backends_submodules(parentmodule):
 
         if is_pkg:
             # The actual python package with the backend implementation
-            actual = importlib.import_module(__name__ + "." + module_name)
+            actual = importlib.import_module(f'{__name__}.{module_name}')
             # A dummy module to inject in the parent module
             fullmodulename = "ROOT.RDF.Experimental.Distributed." + module_name
             dummy = types.ModuleType(fullmodulename)

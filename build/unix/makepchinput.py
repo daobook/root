@@ -165,10 +165,7 @@ def getExtraIncludes(headers):
    """
    Add include files according to list
    """
-   allHeadersPartContent=""
-   for header in headers:
-      allHeadersPartContent+='#include "%s"\n' %header
-   return allHeadersPartContent
+   return "".join('#include "%s"\n' %header for header in headers)
 
 #-------------------------------------------------------------------------------
 def getDictNames(theDirName):
@@ -182,8 +179,11 @@ def getDictNames(theDirName):
    for wildcard in wildcards:
       allDictNames += glob.glob(wildcard)
    stdDictpattern = os.path.join("core","metautils","src","G__std_")
-   dictNames = filter (lambda dictName: not (stdDictpattern in dictName or "/roottest/" in dictName),allDictNames )
-   return dictNames
+   return filter(
+       lambda dictName: stdDictpattern not in dictName and "/roottest/" not in
+       dictName,
+       allDictNames,
+   )
 
 #-------------------------------------------------------------------------------
 def getDirName(dictName):
@@ -207,9 +207,7 @@ def isAnyPatternInString(patterns,theString):
    """
    Check if any of the patterns is contained in the string
    """
-   for pattern in patterns:
-      if os.path.normpath(pattern) in theString: return True
-   return False
+   return any(os.path.normpath(pattern) in theString for pattern in patterns)
 
 #-------------------------------------------------------------------------------
 def isDirForPCH(dirName, legacyPyROOT):
@@ -255,10 +253,8 @@ def isDirForPCH(dirName, legacyPyROOT):
    if (sys.platform != 'win32' and sys.maxsize <= 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
       PCHPatternsBlacklist.append("tree/dataframe")
 
-   accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
+   return isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)
-
-   return accepted
 
 #-------------------------------------------------------------------------------
 def getLinesFromDict(marker, dictFileName):
@@ -268,16 +264,15 @@ def getLinesFromDict(marker, dictFileName):
    Return them as List
    """
    selectedLines = []
-   ifile = open(dictFileName)
-   lines = ifile.readlines()
-   ifile.close()
+   with open(dictFileName) as ifile:
+      lines = ifile.readlines()
    recording = False
    for line in lines:
       if marker in line:
          recording = True
          continue
 
-      if recording and "nullptr" == line[0:7]: break
+      if recording and line[:7] == "nullptr": break
 
       if recording:
          selectedLines.append(line[:-1])
@@ -308,9 +303,7 @@ def getIncludePathsFromDict(dictFileName):
    """
    incPathsPart=[]
    selectedLines = getLinesFromDict('static const char* includePaths[]', dictFileName)
-   for selectedLine in selectedLines:
-      incPath = selectedLine[1:-2] # remove the "," and the two '"'
-      incPathsPart.append(incPath)
+   incPathsPart.extend(selectedLine[1:-2] for selectedLine in selectedLines)
    return incPathsPart
 
 #-------------------------------------------------------------------------------
@@ -387,19 +380,16 @@ def getCppFlags(rootSrcDir,allIncPaths):
    We must resolve softlinks.
    returns a string
    """
-   allHeadersPartContent = ""
    filteredIncPaths = sorted(list(set(resolveSoftLinks(allIncPaths))))
    for name in resolveSoftLinks((rootSrcDir,os.getcwd())):
-      filteredIncPaths = filter (lambda incPath: not name in incPath,filteredIncPaths)
-   for incPath in filteredIncPaths:
-      allHeadersPartContent += "-I%s\n" %incPath
-   return allHeadersPartContent
+      filteredIncPaths = filter(lambda incPath: name not in incPath,
+                                filteredIncPaths)
+   return "".join("-I%s\n" %incPath for incPath in filteredIncPaths)
 
 #-------------------------------------------------------------------------------
 def writeToFile(content, filename):
-   ofile = open(filename, "w")
-   ofile.write(content)
-   ofile.close()
+   with open(filename, "w") as ofile:
+      ofile.write(content)
 
 #-------------------------------------------------------------------------------
 def writeFiles(contentFileNamePairs):
@@ -425,9 +415,8 @@ def getExtraHeaders():
 def removeUnwantedHeaders(allHeadersContent):
    """ remove unwanted headers, e.g. the ones used for dictionaries but not desirable in the pch
    """
-   unwantedHeaders = []
    deprecatedHeaders = ['']
-   unwantedHeaders.extend(deprecatedHeaders)
+   unwantedHeaders = list(deprecatedHeaders)
    for unwantedHeader in unwantedHeaders:
       allHeadersContent = allHeadersContent.replace('#include "%s"' %unwantedHeader,"")
    return allHeadersContent

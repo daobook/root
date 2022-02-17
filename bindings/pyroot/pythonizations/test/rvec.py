@@ -21,9 +21,7 @@ class RVec(unittest.TestCase):
             it = iter(rvec)
             it2 = iter(it)
             self.assertEqual(it, it2)
-            c = 0 # Prevent potential optimization of the loop
-            for x in it2:
-                c += 1
+            c = sum(1 for _ in it2)
             self.assertEqual(c, 3)
 
 

@@ -16,11 +16,7 @@ class RooRealVar(object):
 
         import numpy as np
 
-        if range_name:
-            binning = self.getBinning(range_name)
-        else:
-            binning = self.getBinning()
-
+        binning = self.getBinning(range_name) if range_name else self.getBinning()
         num_bins = binning.numBins()
         bin_array = np.zeros(num_bins + 1)
         if num_bins == 0:

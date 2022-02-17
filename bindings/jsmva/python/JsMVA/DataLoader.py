@@ -32,7 +32,14 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
     if vi==0:
         return 0
 
-    h = TH1F(className, str(vi.GetExpression()) + " ("+className+")", numBin, vi.GetMin(), vi.GetMax())
+    h = TH1F(
+        className,
+        f'{str(vi.GetExpression())} ({className})',
+        numBin,
+        vi.GetMin(),
+        vi.GetMax(),
+    )
+
 
     clsn = dsinfo.GetClassInfo(className).GetNumber()
     ds   = dsinfo.GetDataSet()
@@ -76,7 +83,7 @@ def GetCorrelationMatrixInJSON(className, varNames, matrix):
         for j in xrange(len(matrix)):
             m[i][j] = matrix[i][j]
     th2 = ROOT.TH2D(m)
-    th2.SetTitle("Correlation matrix ("+className+")")
+    th2.SetTitle(f'Correlation matrix ({className})')
     for i in xrange(len(varNames)):
         th2.GetXaxis().SetBinLabel(i+1, varNames[i])
         th2.GetYaxis().SetBinLabel(i+1, varNames[i])
@@ -122,7 +129,7 @@ def DrawInputVariable(dl, variableName, numBin=100, processTrfs=[]):
     processTrfsSTR = ""
     if len(processTrfs)>0:
         for o in processTrfs:
-            processTrfsSTR += str(o) + ";"
+            processTrfsSTR += f'{str(o)};'
         processTrfsSTR = processTrfsSTR[:-1]
     sig = GetInputVariableHist(dl, "Signal",     variableName, numBin, processTrfsSTR)
     bkg = GetInputVariableHist(dl, "Background", variableName, numBin, processTrfsSTR)

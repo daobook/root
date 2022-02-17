@@ -18,7 +18,7 @@ class RooVectorDataStore(object):
 
         def check_for_duplicate_name(name):
             if name in data:
-                raise RuntimeError("Attempt to add " + name + " twice to the numpy arrays!")
+                raise RuntimeError(f'Attempt to add {name} twice to the numpy arrays!')
 
         array_info = self.getArrays()
         n = array_info.size

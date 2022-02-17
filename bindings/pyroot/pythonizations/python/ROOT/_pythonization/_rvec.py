@@ -91,10 +91,7 @@ def get_array_interface(self):
             size = self.size()
             # Numpy breaks for data pointer of 0 even though the array is empty.
             # We set the pointer to 1 but the value itself is arbitrary and never accessed.
-            if self.empty():
-                pointer = 1
-            else:
-                pointer = GetDataPointer(self, cppname, "data")
+            pointer = 1 if self.empty() else GetDataPointer(self, cppname, "data")
             return {
                 "shape": (size, ),
                 "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),

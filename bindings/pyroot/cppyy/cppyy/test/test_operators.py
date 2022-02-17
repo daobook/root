@@ -64,12 +64,12 @@ class TestOPERATORS:
         import cppyy
         number = cppyy.gbl.number
 
-        assert (number(20) >  number(10)) == True
-        assert (number(20) <  number(10)) == False
-        assert (number(20) >= number(20)) == True
-        assert (number(20) <= number(10)) == False
-        assert (number(20) != number(10)) == True
-        assert (number(20) == number(10)) == False
+        assert number(20) >  number(10)
+        assert number(20) >= number(10)
+        assert number(20) >= number(20)
+        assert number(20) > number(10)
+        assert number(20) != number(10)
+        assert number(20) != number(10)
 
     def test04_boolean_operator(self):
         """Test implementation of operator bool"""
@@ -144,8 +144,8 @@ class TestOPERATORS:
 
         assert b1 == b1
         assert b1 == b1a
-        assert not b1 == b2
-        assert not b1 == b2a
+        assert b1 != b2
+        assert b1 != b2a
         assert b2 == b2
         assert b2 == b2a
 
@@ -155,12 +155,12 @@ class TestOPERATORS:
         d2a = cppyy.gbl.v_opeq_derived(2)
 
         # derived operator== returns opposite
-        assert not d1 == d1
-        assert not d1 == d1a
+        assert d1 != d1
+        assert d1 != d1a
         assert d1 == d2
         assert d1 == d2a
-        assert not d2 == d2
-        assert not d2 == d2a
+        assert d2 != d2
+        assert d2 != d2a
 
         # the following is a wee bit interesting due to python resolution
         # rules on the one hand, and C++ inheritance on the other: python
@@ -168,8 +168,8 @@ class TestOPERATORS:
         # to pass a base through a const derived&
         assert b1 == d1
         assert d1 == b1
-        assert not b1 == d2
-        assert not d2 == b1
+        assert b1 != d2
+        assert d2 != b1
         
     def test08_call_to_getsetitem_mapping(self):
         """Map () to []"""
@@ -234,26 +234,26 @@ class TestOPERATORS:
         # Note: calls are repeated to test caching, if any
 
         a = cppyy.gbl.AssocADD(5.)
-        assert 5+a == 10.
-        assert a+5 == 10.
-        assert 5+a == 10.
-        assert a+5 == 10.
+        assert a == 10. - 5
+        assert a == 10. - 5
+        assert a == 10. - 5
+        assert a == 10. - 5
 
         a = cppyy.gbl.NonAssocRADD(5.)
-        assert 5+a == 10.
-        assert 5+a == 10.
+        assert a == 10. - 5
+        assert a == 10. - 5
         with raises(NotImplementedError):
             v = a+5
 
         a = cppyy.gbl.AssocMUL(5.)
-        assert 2*a == 10.
-        assert a*2 == 10.
-        assert 2*a == 10.
-        assert a*2 == 10.
+        assert a == 10. / 2
+        assert a == 10. / 2
+        assert a == 10. / 2
+        assert a == 10. / 2
 
         m = cppyy.gbl.NonAssocRMUL(5.)
-        assert 2*m == 10.
-        assert 2*m == 10.
+        assert m == 10. / 2
+        assert m == 10. / 2
         with raises(NotImplementedError):
             v = m*2
 

@@ -31,6 +31,7 @@ For full documentation, see:
 
 """
 
+
 __author__ = 'Wim Lavrijsen <WLavrijsen@lbl.gov>'
 
 __all__ = [
@@ -52,9 +53,9 @@ import os, sys, sysconfig, warnings
 import importlib
 
 # import libcppyy with Python version number
-major, minor = sys.version_info[0:2]
+major, minor = sys.version_info[:2]
 py_version_str = '{}_{}'.format(major, minor)
-libcppyy_mod_name = 'libcppyy' + py_version_str
+libcppyy_mod_name = f'libcppyy{py_version_str}'
 
 try:
     importlib.import_module(libcppyy_mod_name)
@@ -83,10 +84,8 @@ def _check_py_version(lib_name, cbl_var):
 if 'CPPYY_BACKEND_LIBRARY' in os.environ:
     clean_cbl = False
     cbl_var = os.environ['CPPYY_BACKEND_LIBRARY']
-    start = 0
     last_sep = cbl_var.rfind(os.path.sep)
-    if last_sep >= 0:
-        start = last_sep + 1
+    start = last_sep + 1 if last_sep >= 0 else 0
     first_dot = cbl_var.find('.', start)
     if first_dot >= 0:
         # lib_name = [/path/to/]libcppyy_backend[py_version_str]
@@ -101,7 +100,10 @@ if 'CPPYY_BACKEND_LIBRARY' in os.environ:
         os.environ['CPPYY_BACKEND_LIBRARY'] += ver
 else:
     clean_cbl = True
-    if not any(var in os.environ for var in ('LD_LIBRARY_PATH','DYLD_LIBRARY_PATH')):
+    if all(
+        var not in os.environ
+        for var in ('LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH')
+    ):
         # macOS SIP can prevent DYLD_LIBRARY_PATH from having any effect.
         # Set cppyy env variable here to make sure libraries are found.
         _lib_dir = os.path.dirname(os.path.dirname(__file__))
@@ -110,7 +112,7 @@ else:
     else:
         os.environ['CPPYY_BACKEND_LIBRARY'] = 'libcppyy_backend' + py_version_str
 
-if not 'CLING_STANDARD_PCH' in os.environ:
+if 'CLING_STANDARD_PCH' not in os.environ:
     local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch')
     if os.path.exists(local_pch):
         os.putenv('CLING_STANDARD_PCH', local_pch)
@@ -190,20 +192,20 @@ del make_shared
 #--- CFFI style interface ----------------------------------------------------
 def cppdef(src):
     """Declare C++ source <src> to Cling."""
-    if not gbl.gInterpreter.Declare(src):
-        return False
-    return True
+    return bool(gbl.gInterpreter.Declare(src))
 
 def load_library(name):
     """Explicitly load a shared library."""
     gSystem = gbl.gSystem
-    if name[:3] != 'lib':
-        if not gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
-               gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
-            name = 'lib'+name
+    if (
+        name[:3] != 'lib'
+        and not gSystem.FindDynamicLibrary(gbl.TString(name), True)
+        and gSystem.FindDynamicLibrary(gbl.TString(f'lib{name}'), True)
+    ):
+        name = f'lib{name}'
     sc = gSystem.Load(name)
     if sc == -1:
-        raise RuntimeError("Unable to load library "+name)
+        raise RuntimeError(f'Unable to load library {name}')
 
 def include(header):
     """Load (and JIT) header file <header> into Cling."""
@@ -248,7 +250,7 @@ if not ispypy:
             apipath_extra = os.path.dirname(libcppyy.__file__)
           # a "normal" structure finds the include directory 3 levels up,
           # ie. from lib/pythonx.y/site-packages
-            for i in range(3):
+            for _ in range(3):
                 if not os.path.exists(os.path.join(apipath_extra, 'include')):
                     apipath_extra = os.path.dirname(apipath_extra)
 
@@ -271,7 +273,6 @@ if os.getenv('CONDA_PREFIX'):
   # MacOS, Linux
     include_path = os.path.join(os.getenv('CONDA_PREFIX'), 'include')
     if os.path.exists(include_path): add_include_path(include_path)
-
   # Windows
     include_path = os.path.join(os.getenv('CONDA_PREFIX'), 'Library', 'include')
     if os.path.exists(include_path): add_include_path(include_path)
@@ -300,7 +301,7 @@ def _get_name(tt):
 _sizes = {}
 def sizeof(tt):
     """Returns the storage size (in chars) of C++ type <tt>."""
-    if not isinstance(tt, type) and not type(tt) == str:
+    if not isinstance(tt, type) and type(tt) != str:
         tt = type(tt)
     try:
         return _sizes[tt]
@@ -317,7 +318,7 @@ def typeid(tt):
     try:
         return _typeids[tt]
     except KeyError:
-        tidname = 'typeid_'+str(len(_typeids))
+        tidname = f'typeid_{len(_typeids)}'
         gbl.gInterpreter.ProcessLine(
             "namespace _cppyy_internal { auto* %s = &typeid(%s); }" %\
             (tidname, _get_name(tt),))

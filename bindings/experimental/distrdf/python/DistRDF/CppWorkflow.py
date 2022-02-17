@@ -331,10 +331,7 @@ class CppWorkflow(object):
                 for nelem, elem in enumerate(arg):
                     if nelem > 0:
                         args += ','
-                    if isinstance(elem, str):
-                        args += '"{}"'.format(elem)
-                    else:
-                        args += '{}'.format(elem)
+                    args += '"{}"'.format(elem) if isinstance(elem, str) else '{}'.format(elem)
                 args += '}'
             elif isinstance(arg, ROOT.RDF.RSnapshotOptions):
                 ROOT.Warning('DistRDF',
@@ -511,7 +508,7 @@ class CppWorkflow(object):
         Python-only actions on them (e.g. `AsNumpy`).
         '''
 
-        code = '''
+        return '''
 {includes}
 
 namespace {namespace} {{
@@ -538,11 +535,11 @@ CppWorkflowResult {func_name}(ROOT::RDF::RNode &rdf0)
 }}
 
 }}
-'''.format(func_name=CppWorkflow._FUNCTION_NAME,
-           namespace=CppWorkflow._FUNCTION_NAMESPACE,
-           includes=self._includes,
-           lambdas=self._lambdas,
-           nodes=self._graph_nodes)
-
-        return code
+'''.format(
+            func_name=CppWorkflow._FUNCTION_NAME,
+            namespace=CppWorkflow._FUNCTION_NAMESPACE,
+            includes=self._includes,
+            lambdas=self._lambdas,
+            nodes=self._graph_nodes,
+        )
 

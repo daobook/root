@@ -20,8 +20,7 @@ def setup_module(mod):
 # after CPython's Lib/test/seq_tests.py
 def iterfunc(seqn):
     """Regular generator"""
-    for i in seqn:
-        yield i
+    yield from seqn
 
 class Sequence:
     """Sequence using __getitem__"""
@@ -50,8 +49,7 @@ class IterGen:
         self.seqn = seqn
         self.i = 0
     def __iter__(self):
-        for val in self.seqn:
-            yield val
+        yield from self.seqn
 
 class IterNextOnly:
     """Missing __getitem__ and __iter__"""
@@ -163,7 +161,7 @@ def getslice_cpython_test(type2test):
     l = [0, 1, 2, 3, 4]
     u = type2test(l)
 
-    assert u[0:0]        == type2test()
+    assert u[:0] == type2test()
     assert u[1:2]        == type2test([1])
     assert u[-2:-1]      == type2test([3])
     assert u[-1000:1000] == u
@@ -171,7 +169,6 @@ def getslice_cpython_test(type2test):
     assert u[:]          == u
     assert u[1:None]     == type2test([1, 2, 3, 4])
     assert u[None:3]     == type2test([0, 1, 2])
-
   # Extended slices
     assert u[::]          == u
     assert u[::2]         == type2test([0, 2, 4])
@@ -189,7 +186,6 @@ def getslice_cpython_test(type2test):
     assert u[100:-100:-1] == u[::-1]
     assert u[-100:100:-1] == type2test([])
     assert u[-pylong(100):pylong(100):pylong(2)] == type2test([0, 2, 4])
-
   # Test extreme cases with long ints
     a = type2test([0,1,2,3,4])
     # the following two fail b/c PySlice_GetIndices succeeds w/o error, while
@@ -300,8 +296,6 @@ class TestSTLVECTOR:
 
         v = cppyy.gbl.std.vector(int)()
         assert not v
-        for arg in v:
-            pass
         v.__destruct__()
 
     def test04_vector_iteration(self):
@@ -320,12 +314,9 @@ class TestSTLVECTOR:
         assert v.size() == self.N
         assert len(v) == self.N
 
-        i = 0
-        for arg in v:
+        for i, arg in enumerate(v):
             assert arg == i
-            i += 1
-
-        assert list(v) == [i for i in range(self.N)]
+        assert list(v) == list(range(self.N))
 
         v.__destruct__()
 
@@ -381,7 +372,7 @@ class TestSTLVECTOR:
         assert v[-1] == self.N-1
         assert v[-2] == self.N-2
 
-        assert len(v[0:0]) == 0
+        assert len(v[:0]) == 0
         assert v[1:2][0] == v[1]
 
         v2 = v[2:-1]
@@ -396,14 +387,14 @@ class TestSTLVECTOR:
         import cppyy
 
         vb = cppyy.gbl.std.vector(bool)(8)
-        assert [x for x in vb] == [False]*8
+        assert list(vb) == [False]*8
 
         vb[0] = True
         assert vb[0]
         vb[-1] = True
         assert vb[7]
 
-        assert [x for x in vb] == [True]+[False]*6+[True]
+        assert list(vb) == [True]+[False]*6+[True]
 
         assert len(vb[4:8]) == 4
         assert list(vb[4:8]) == [False]*3+[True]
@@ -795,8 +786,6 @@ class TestSTLLIST:
 
         a = std.list(int)()
         assert not a
-        for arg in a:
-            pass
 
     def test03_replacement_of_eq(self):
         """A global templated function should work as a method"""
@@ -810,7 +799,7 @@ class TestSTLLIST:
 
         a = cppyy.gbl.std.list[int]()
         a.begin().__class__.__eq__ = cppyy.gbl.cont_eq[cppyy.gbl.std.list[int]]
-        assert not (a.begin() == a.end())
+        assert a.begin() != a.end()
 
         a = cppyy.gbl.std.list[float]()
         assert a.begin() == a.end()
@@ -878,8 +867,6 @@ class TestSTLMAP:
 
         m = std.map(int, int)()
         assert not m
-        for key, value in m:
-            pass
 
     def test04_unsignedvalue_typemap_types(self):
         """Test assignability of maps with unsigned value types"""
@@ -967,9 +954,7 @@ class TestSTLMAP:
 
         for num in [4, 5, 6, 7]:
             cls = getattr(cppyy.gbl, 'stl_like_class%d' % num)
-            count = 0
-            for i in cls():
-                count += 1
+            count = sum(1 for _ in cls())
             assert count == 10
 
 
@@ -992,16 +977,16 @@ class TestSTLITERATOR:
         b2, e2 = v.begin(), v.end()
 
         assert b1 == b2
-        assert not b1 != b2
+        assert b1 == b2
 
         assert e1 == e2
-        assert not e1 != e2
+        assert e1 == e2
 
-        assert not b1 == e1
+        assert b1 != e1
         assert b1 != e1
 
         b1.__preinc__()
-        assert not b1 == b2
+        assert b1 != b2
         assert b1 == e2
         assert b1 != b2
         assert b1 == e2
@@ -1055,7 +1040,7 @@ class TestSTLARRAY:
         from cppyy import gbl
         from cppyy.gbl import std
 
-        ll = [gbl.ArrayTest.Point() for i in range(4)]
+        ll = [gbl.ArrayTest.Point() for _ in range(4)]
         for i in range(len(ll)):
             ll[i].px = 13*i
             ll[i].py = 42*i

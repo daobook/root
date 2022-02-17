@@ -47,15 +47,15 @@ def GetDeclarer():
 class MagicLoader(object):
     '''Class to load JupyROOT Magics'''
     def __init__(self,kernel):
-         magics_path = os.path.dirname(__file__)+"/magics/*.py"
-         for file in glob(magics_path):
-              if file != magics_path.replace("*.py","__init__.py"):
-                  module_path="JupyROOT.kernel.magics."+file.split("/")[-1].replace(".py","")
-                  try:
-                      module = importlib.import_module(module_path)
-                      module.register_magics(kernel)
-                  except ImportError:
-                      raise Exception("Error importing Magic: %s"%module_path)
+        magics_path = f'{os.path.dirname(__file__)}/magics/*.py'
+        for file in glob(magics_path):
+             if file != magics_path.replace("*.py","__init__.py"):
+                 module_path="JupyROOT.kernel.magics."+file.split("/")[-1].replace(".py","")
+                 try:
+                     module = importlib.import_module(module_path)
+                     module.register_magics(kernel)
+                 except ImportError:
+                     raise Exception("Error importing Magic: %s"%module_path)
 
 
 

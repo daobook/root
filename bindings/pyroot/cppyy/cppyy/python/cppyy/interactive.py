@@ -31,6 +31,10 @@ class InteractiveLazy(object):
                 return ['g', 'std']+cppyy.__all__
         return getattr(cppyy, attr)
 
-sys.modules['cppyy.interactive'] = InteractiveLazy(\
-    not ispypy and not (hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules))
+sys.modules['cppyy.interactive'] = InteractiveLazy(
+    not ispypy
+    and not hasattr(__builtins__, '__IPYTHON__')
+    and 'IPython' not in sys.modules
+)
+
 del InteractiveLazy, ispypy

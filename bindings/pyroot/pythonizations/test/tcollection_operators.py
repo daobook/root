@@ -89,10 +89,7 @@ class TCollectionOperators(unittest.TestCase):
         self.assertEqual(c.GetEntries(), lenc * self.factor)
 
         it = ROOT.TIter(c)
-        subc = []
-        for _ in range(lenc):
-            subc.append(it.Next())
-
+        subc = [it.Next() for _ in range(lenc)]
         for _ in range(self.factor - 1):
             for o in subc:
                 self.assertEqual(o, it.Next())

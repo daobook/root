@@ -88,7 +88,7 @@ class functions:
             del kwargs["originalFunction"]
         OptionStringPassed = False
         if (len(args) - 1) == optStringStartIndex:
-            opt = args[optStringStartIndex] + ":"
+            opt = f'{args[optStringStartIndex]}:'
             tmp = list(args)
             del tmp[optStringStartIndex]
             args = tuple(tmp)
@@ -97,25 +97,20 @@ class functions:
             opt = ""
         for key in kwargs:
             if isinstance(kwargs[key], bool):
-                if kwargs[key] == True:
-                    opt += key + ":"
-                else:
-                    opt += "!" + key + ":"
+                opt += f'{key}:' if kwargs[key] == True else f'!{key}:'
             elif isinstance(kwargs[key], list):
                 ss = ""
                 for o in kwargs[key]:
                     if isinstance(o, dict):
-                        sst = ""
-                        for kk in o:
-                            sst += kk + "=" + str(o[kk]) + ","
-                        ss += sst[:-1] + "|"
+                        sst = "".join(f'{kk}={str(o[kk])},' for kk in o)
+                        ss += f'{sst[:-1]}|'
                     elif key=="Layout":
-                        ss += str(o) + ","
+                        ss += f'{str(o)},'
                     else:
-                        ss += str(o) + ";"
-                opt += key + "=" + ss[:-1] + ":"
+                        ss += f'{str(o)};'
+                opt += f'{key}={ss[:-1]}:'
             else:
-                opt += key + "=" + str(kwargs[key]) + ":"
+                opt += f'{key}={str(kwargs[key])}:'
         tmp = list(args)
         if OptionStringPassed or len(kwargs) > 0:
             tmp.append(opt[:-1])
@@ -135,11 +130,7 @@ class functions:
     # @param selector if method in module contains this string will be selected
     @staticmethod
     def __getMethods(module, selector):
-        methods = []
-        for method in dir(module):
-            if method.find(selector)!=-1:
-                methods.append(method)
-        return methods
+        return [method for method in dir(module) if method.find(selector)!=-1]
 
     ## This function will register all functions which name contains "Draw" to TMVA.DataLoader and TMVA.Factory
     # from DataLoader and Factory modules
@@ -175,9 +166,7 @@ class functions:
     def captureObjects(*args):
         ip = get_ipython()
         vList = [ip.user_ns[key] for key in ip.user_ns]
-        res = {}
-        for ttype in args:
-            res[ttype.__name__] = [ttype]
+        res = {ttype.__name__: [ttype] for ttype in args}
         for var in vList:
             for ttype in args:
                 if type(var) == ttype and isinstance(var, ttype):
@@ -242,10 +231,16 @@ jsmva.$funcName('$divid', '$dat');
     ## Inserts initialization codes to notebook
     @staticmethod
     def InitJsMVA():
-        display(HTML(JsDraw.__JsMVAInitCode.substitute({
-            'PATH': JsDraw.__jsMVASourceDir,
-            'CSSFile': JsDraw.__jsMVACSSDir + '/TMVAHTMLOutput.min.css'
-        })))
+        display(
+            HTML(
+                JsDraw.__JsMVAInitCode.substitute(
+                    {
+                        'PATH': JsDraw.__jsMVASourceDir,
+                        'CSSFile': f'{JsDraw.__jsMVACSSDir}/TMVAHTMLOutput.min.css',
+                    }
+                )
+            )
+        )
 
     ## Inserts the draw area and drawing JavaScript to output
     # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be drawed
@@ -259,13 +254,19 @@ jsmva.$funcName('$divid', '$dat');
             dat = ROOT.TBufferJSON.ConvertToJSON(obj)
             dat = str(dat).replace("\n", "")
         JsDraw.__divUID += 1
-        display(HTML(JsDraw.__jsCode.substitute({
-            'funcName': jsDrawMethod,
-            'divid':'jstmva_'+str(JsDraw.__divUID),
-            'dat': dat,
-            'width': JsDraw.jsCanvasWidth,
-            'height': JsDraw.jsCanvasHeight
-         })))
+        display(
+            HTML(
+                JsDraw.__jsCode.substitute(
+                    {
+                        'funcName': jsDrawMethod,
+                        'divid': f'jstmva_{str(JsDraw.__divUID)}',
+                        'dat': dat,
+                        'width': JsDraw.jsCanvasWidth,
+                        'height': JsDraw.jsCanvasHeight,
+                    }
+                )
+            )
+        )
 
     ## Inserts CSS file
     # @param cssName The CSS file name. File must be in jsMVACSSDir!
@@ -291,11 +292,17 @@ jsmva.$funcName('$divid', '$dat');
         else:
             divid = str(JsDraw.__divUID)
             jsCode = JsDraw.__jsCodeForDataInsert
-        display(HTML(jsCode.substitute({
-            'funcName': dataInserterMethod,
-            'divid': 'jstmva_'+divid,
-            'dat': dat
-        })))
+        display(
+            HTML(
+                jsCode.substitute(
+                    {
+                        'funcName': dataInserterMethod,
+                        'divid': f'jstmva_{divid}',
+                        'dat': dat,
+                    }
+                )
+            )
+        )
 
     ## Draws a signal and background histogram to a newly created TCanvas
     # @param sig signal histogram

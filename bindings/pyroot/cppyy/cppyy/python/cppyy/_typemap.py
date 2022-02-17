@@ -7,8 +7,8 @@ import sys
 def _create_mapper(cls, extra_dct=None):
     def mapper(name, scope):
         if scope:
-            cppname = scope+'::'+name
-            modname = 'cppyy.gbl.'+scope
+            cppname = f'{scope}::{name}'
+            modname = f'cppyy.gbl.{scope}'
         else:
             cppname = name
             modname = 'cppyy.gbl'
@@ -56,8 +56,7 @@ def with_metaclass(meta, *bases):
 
 class _BoolMeta(type):
     def __call__(self, val = bool()):
-        if val: return True
-        else: return False
+        return bool(val)
 
 class _Bool(with_metaclass(_BoolMeta, object)):
     pass

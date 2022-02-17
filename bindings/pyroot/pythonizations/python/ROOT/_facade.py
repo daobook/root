@@ -159,7 +159,7 @@ class ROOTFacade(types.ModuleType):
             import builtins as __builtin__  # name change in p3
         _orig_ihook = __builtin__.__import__
         def _importhook(name, *args, **kwds):
-            if name[0:5] == 'ROOT.':
+            if name[:5] == 'ROOT.':
                 try:
                     sys.modules[name] = getattr(self, name[5:])
                 except Exception:
@@ -197,14 +197,12 @@ class ROOTFacade(types.ModuleType):
             # Make the attributes of the facade be injected in the
             # caller module
             raise AttributeError()
-        # Note that hasattr caches the lookup for getattr
         elif hasattr(gbl_namespace, name):
             return getattr(gbl_namespace, name)
         elif hasattr(gbl_namespace.ROOT, name):
             return getattr(gbl_namespace.ROOT, name)
         else:
-            res = gROOT.FindObject(name)
-            if res:
+            if res := gROOT.FindObject(name):
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
 
@@ -247,7 +245,7 @@ class ROOTFacade(types.ModuleType):
         # Run custom logon file (must be after creation of ROOT globals)
         hasargv = hasattr(sys, 'argv')
         # -n disables the reading of the logon file, just like with root
-        if hasargv and not '-n' in sys.argv and not self.PyConfig.DisableRootLogon:
+        if hasargv and '-n' not in sys.argv and not self.PyConfig.DisableRootLogon:
             file_path = os.path.expanduser('~/.rootlogon.py')
             if os.path.exists(file_path):
                 # Could also have used execfile, but import is likely to give fewer surprises
@@ -268,9 +266,10 @@ class ROOTFacade(types.ModuleType):
                 # System logon, user logon, and local logon (skip Rint.Logon)
                 name = '.rootlogon.C'
                 logons = [
-                    os.path.join(str(self.TROOT.GetEtcDir()), 'system' + name),
-                    os.path.expanduser(os.path.join('~', name))
+                    os.path.join(str(self.TROOT.GetEtcDir()), f'system{name}'),
+                    os.path.expanduser(os.path.join('~', name)),
                 ]
+
                 if logons[-1] != os.path.join(os.getcwd(), name):
                     logons.append(name)
                 for rootlogon in logons:

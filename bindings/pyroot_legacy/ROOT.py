@@ -24,11 +24,11 @@ import os, sys, types
 import cppyy
 
 ## there's no version_info in 1.5.2
-if sys.version[0:3] < '2.2':
+if sys.version[:3] < '2.2':
    raise ImportError( 'Python Version 2.2 or above is required.' )
 
 ## 2.2 has 10 instructions as default, > 2.3 has 100 ... make same
-if sys.version[0:3] == '2.2':
+if sys.version[:3] == '2.2':
    sys.setcheckinterval( 100 )
 
 ## hooks and other customizations are not used ith iPython
@@ -74,7 +74,7 @@ try:
          if not matches: matches = []
          b = text.find('.')
          try:
-            if 0 <= b and self.namespace[text[:b]].__name__ == 'ROOT':
+            if b >= 0 and self.namespace[text[:b]].__name__ == 'ROOT':
                matches += self.root_global_matches( text[b+1:], text[:b+1] )
          except AttributeError:    # not all objects have a __name__
             pass
@@ -213,10 +213,7 @@ _sigPolicyAPI = [ 'SetSignalPolicy', 'kSignalFast', 'kSignalSafe' ]
 ### helpers ---------------------------------------------------------------------
 def split( str ):
    npos = str.find( ' ' )
-   if 0 <= npos:
-      return str[:npos], str[npos+1:]
-   else:
-      return str, ''
+   return (str[:npos], str[npos+1:]) if npos >= 0 else (str, '')
 
 
 ### put std namespace directly onto ROOT ----------------------------------------
@@ -230,7 +227,7 @@ sys.modules['ROOT.std'] = cppyy.gbl.std
 def _TTree__iter__( self ):
    i = 0
    bytes_read = self.GetEntry(i)
-   while 0 < bytes_read:
+   while bytes_read > 0:
       yield self                   # TODO: not sure how to do this w/ C-API ...
       i += 1
       bytes_read = self.GetEntry(i)
@@ -251,7 +248,7 @@ _root._add__array_interface__ = _add__array_interface__
 
 # TTree.AsMatrix functionality
 def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labels=False):
-    """Read-out the TTree as a numpy array.
+   """Read-out the TTree as a numpy array.
 
     Note that the reading is performed in multiple threads if the implicit
     multi-threading of ROOT is enabled.
@@ -266,113 +263,118 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
         array(, labels): Numpy array(, labels of columns)
     """
 
-    # Import numpy lazily
-    try:
-        import numpy as np
-    except:
-        raise ImportError("Failed to import numpy during call of TTree.AsMatrix.")
+   # Import numpy lazily
+   try:
+       import numpy as np
+   except:
+       raise ImportError("Failed to import numpy during call of TTree.AsMatrix.")
 
-    # Check that tree has entries
-    if self.GetEntries() == 0:
-        raise Exception("Tree {} has no entries.".format(self.GetName()))
+   # Check that tree has entries
+   if self.GetEntries() == 0:
+       raise Exception("Tree {} has no entries.".format(self.GetName()))
 
-    # Get all columns of the tree if no columns are specified
-    if columns is None:
-        columns = [branch.GetName() for branch in self.GetListOfBranches()]
+   # Get all columns of the tree if no columns are specified
+   if columns is None:
+       columns = [branch.GetName() for branch in self.GetListOfBranches()]
 
     # Exclude columns
-    if exclude == None:
-        exclude = []
-    columns = [col for col in columns if not col in exclude]
+   if exclude is None:
+      exclude = []
+   columns = [col for col in columns if col not in exclude]
 
-    if not columns:
-        raise Exception("Arguments resulted in no selected branches.")
+   if not columns:
+       raise Exception("Arguments resulted in no selected branches.")
 
-    # Check validity of branches
-    supported_branch_dtypes = ["Float_t", "Double_t", "Char_t", "UChar_t", "Short_t", "UShort_t",
-            "Int_t", "UInt_t", "Long64_t", "ULong64_t"]
-    col_dtypes = []
-    invalid_cols_notfound = []
-    invalid_cols_dtype = {}
-    invalid_cols_multipleleaves = {}
-    invalid_cols_leafname = {}
-    for col in columns:
-        # Check that column exists
-        branch = self.GetBranch(col)
-        if branch == None:
-            invalid_cols_notfound.append(col)
-            continue
+   # Check validity of branches
+   supported_branch_dtypes = ["Float_t", "Double_t", "Char_t", "UChar_t", "Short_t", "UShort_t",
+           "Int_t", "UInt_t", "Long64_t", "ULong64_t"]
+   col_dtypes = []
+   invalid_cols_notfound = []
+   invalid_cols_dtype = {}
+   invalid_cols_multipleleaves = {}
+   invalid_cols_leafname = {}
+   for col in columns:
+      # Check that column exists
+      branch = self.GetBranch(col)
+      if branch is None:
+         invalid_cols_notfound.append(col)
+         continue
 
-        # Check that the branch has only one leaf with the name of the branch
-        leaves = [leaf.GetName() for leaf in branch.GetListOfLeaves()]
-        if len(leaves) != 1:
-            invalid_cols_multipleleaves[col] = len(leaves)
-            continue
-        if leaves[0] != col:
-            invalid_cols_leafname[col] = len(leaves[0])
-            continue
+      # Check that the branch has only one leaf with the name of the branch
+      leaves = [leaf.GetName() for leaf in branch.GetListOfLeaves()]
+      if len(leaves) != 1:
+          invalid_cols_multipleleaves[col] = len(leaves)
+          continue
+      if leaves[0] != col:
+          invalid_cols_leafname[col] = len(leaves[0])
+          continue
 
-        # Check that the leaf of the branch has an arithmetic data-type
-        col_dtype = self.GetBranch(col).GetLeaf(col).GetTypeName()
-        col_dtypes.append(col_dtype)
-        if not col_dtype in supported_branch_dtypes:
-            invalid_cols_dtype[col] = col_dtype
+      # Check that the leaf of the branch has an arithmetic data-type
+      col_dtype = self.GetBranch(col).GetLeaf(col).GetTypeName()
+      col_dtypes.append(col_dtype)
+      if col_dtype not in supported_branch_dtypes:
+         invalid_cols_dtype[col] = col_dtype
 
-    exception_template = "Reading of branch {} is not supported ({})."
-    if invalid_cols_notfound:
-        raise Exception(exception_template.format(invalid_cols_notfound, "branch not existent"))
-    if invalid_cols_multipleleaves:
-        raise Exception(exception_template.format([k for k in invalid_cols_multipleleaves], "branch has multiple leaves"))
-    if invalid_cols_leafname:
-        raise Exception(exception_template.format(
-            [k for k in invalid_cols_leafname], "name of leaf is different from name of branch {}".format(
-                [invalid_cols_leafname[k] for k in invalid_cols_leafname])))
-    if invalid_cols_dtype:
-        raise Exception(exception_template.format(
-            [k for k in invalid_cols_dtype], "branch has unsupported data-type {}".format(
-                [invalid_cols_dtype[k] for k in invalid_cols_dtype])))
+   exception_template = "Reading of branch {} is not supported ({})."
+   if invalid_cols_notfound:
+       raise Exception(exception_template.format(invalid_cols_notfound, "branch not existent"))
+   if invalid_cols_multipleleaves:
+      raise Exception(
+          exception_template.format(
+              list(invalid_cols_multipleleaves), "branch has multiple leaves"))
+   if invalid_cols_leafname:
+      raise Exception(
+          exception_template.format(
+              list(invalid_cols_leafname),
+              "name of leaf is different from name of branch {}".format(
+                  [invalid_cols_leafname[k] for k in invalid_cols_leafname]),
+          ))
+   if invalid_cols_dtype:
+      raise Exception(
+          exception_template.format(
+              list(invalid_cols_dtype),
+              "branch has unsupported data-type {}".format(
+                  [invalid_cols_dtype[k] for k in invalid_cols_dtype]),
+          ))
 
-    # Check that given data-type is supported
-    supported_output_dtypes = ["int", "unsigned int", "long", "unsigned long", "float", "double"]
-    if not dtype in supported_output_dtypes:
-        raise Exception("Data-type {} is not supported, select from {}.".format(
-            dtype, supported_output_dtypes))
+   # Check that given data-type is supported
+   supported_output_dtypes = ["int", "unsigned int", "long", "unsigned long", "float", "double"]
+   if dtype not in supported_output_dtypes:
+      raise Exception("Data-type {} is not supported, select from {}.".format(
+          dtype, supported_output_dtypes))
 
-    # Convert columns iterable to std.vector("string")
-    columns_vector = _root.std.vector("string")(len(columns))
-    for i, col in enumerate(columns):
-        columns_vector[i] = col
+   # Convert columns iterable to std.vector("string")
+   columns_vector = _root.std.vector("string")(len(columns))
+   for i, col in enumerate(columns):
+       columns_vector[i] = col
 
-    # Allocate memory for the read-out
-    flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
+   # Allocate memory for the read-out
+   flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
 
-    # Read the tree as flat std.vector(dtype)
-    tree_ptr = _root.ROOT.Internal.RDF.GetAddress(self)
-    columns_vector_ptr = _root.ROOT.Internal.RDF.GetAddress(columns_vector)
-    flat_matrix_ptr = _root.ROOT.Internal.RDF.GetVectorAddress(dtype)(flat_matrix)
-    jit_code = "ROOT::Internal::RDF::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
-            col_dtypes = ", ".join(col_dtypes),
-            dtype = dtype,
-            tree_ptr = tree_ptr,
-            flat_matrix_ptr = flat_matrix_ptr,
-            columns_vector_ptr = columns_vector_ptr)
-    _root.gInterpreter.Calc(jit_code)
+   # Read the tree as flat std.vector(dtype)
+   tree_ptr = _root.ROOT.Internal.RDF.GetAddress(self)
+   columns_vector_ptr = _root.ROOT.Internal.RDF.GetAddress(columns_vector)
+   flat_matrix_ptr = _root.ROOT.Internal.RDF.GetVectorAddress(dtype)(flat_matrix)
+   jit_code = "ROOT::Internal::RDF::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
+           col_dtypes = ", ".join(col_dtypes),
+           dtype = dtype,
+           tree_ptr = tree_ptr,
+           flat_matrix_ptr = flat_matrix_ptr,
+           columns_vector_ptr = columns_vector_ptr)
+   _root.gInterpreter.Calc(jit_code)
 
-    # Convert the std.vector(dtype) to a numpy array by memory-adoption and
-    # reshape the flat array to the correct shape of the matrix
-    flat_matrix_np = np.asarray(flat_matrix)
-    reshaped_matrix_np = np.reshape(flat_matrix_np,
-            (int(len(flat_matrix)/len(columns)), len(columns)))
+   # Convert the std.vector(dtype) to a numpy array by memory-adoption and
+   # reshape the flat array to the correct shape of the matrix
+   flat_matrix_np = np.asarray(flat_matrix)
+   reshaped_matrix_np = np.reshape(
+       flat_matrix_np, (len(flat_matrix) // len(columns), len(columns)))
 
-    if return_labels:
-        return (reshaped_matrix_np, columns)
-    else:
-        return reshaped_matrix_np
+   return (reshaped_matrix_np, columns) if return_labels else reshaped_matrix_np
 
 
 # RDataFrame.AsNumpy feature
 def _RDataFrameAsNumpy(df, columns=None, exclude=None):
-    """Read-out the RDataFrame as a collection of numpy arrays.
+   """Read-out the RDataFrame as a collection of numpy arrays.
 
     The values of the dataframe are read out as numpy array of the respective type
     if the type is a fundamental type such as float or int. If the type of the column
@@ -395,45 +397,43 @@ def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     Returns:
         dict: Dict with column names as keys and 1D numpy arrays with content as values
     """
-    # Import numpy and numpy.array derived class lazily
-    try:
-        import numpy
-        from _rdf_utils import ndarray
-    except:
-        raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
+   # Import numpy and numpy.array derived class lazily
+   try:
+       import numpy
+       from _rdf_utils import ndarray
+   except:
+       raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
     # Find all column names in the dataframe if no column are specified
-    if not columns:
-        columns = [c for c in df.GetColumnNames()]
+   if not columns:
+      columns = list(df.GetColumnNames())
 
     # Exclude the specified columns
-    if exclude == None:
-        exclude = []
-    columns = [col for col in columns if not col in exclude]
+   if exclude is None:
+      exclude = []
+   columns = [col for col in columns if col not in exclude]
 
-    # Cast input node to base RNode type
-    df_rnode = _root.ROOT.RDF.AsRNode(df)
+   # Cast input node to base RNode type
+   df_rnode = _root.ROOT.RDF.AsRNode(df)
 
-    # Register Take action for each column
-    result_ptrs = {}
-    for column in columns:
-        column_type = df_rnode.GetColumnType(column)
-        result_ptrs[column] = _root.ROOT.Internal.RDF.RDataFrameTake(column_type)(df_rnode, column)
+   # Register Take action for each column
+   result_ptrs = {}
+   for column in columns:
+       column_type = df_rnode.GetColumnType(column)
+       result_ptrs[column] = _root.ROOT.Internal.RDF.RDataFrameTake(column_type)(df_rnode, column)
 
-    # Convert the C++ vectors to numpy arrays
-    py_arrays = {}
-    for column in columns:
-        cpp_reference = result_ptrs[column].GetValue()
-        if hasattr(cpp_reference, "__array_interface__"):
-            tmp = numpy.array(cpp_reference) # This adopts the memory of the C++ object.
-            py_arrays[column] = ndarray(tmp, result_ptrs[column])
-        else:
-            tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
-            for i, x in enumerate(cpp_reference):
-                tmp[i] = x # This creates only the wrapping of the objects and does not copy.
-            py_arrays[column] = ndarray(tmp, result_ptrs[column])
-
-    return py_arrays
+   # Convert the C++ vectors to numpy arrays
+   py_arrays = {}
+   for column in columns:
+      cpp_reference = result_ptrs[column].GetValue()
+      if hasattr(cpp_reference, "__array_interface__"):
+         tmp = numpy.array(cpp_reference) # This adopts the memory of the C++ object.
+      else:
+         tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
+         for i, x in enumerate(cpp_reference):
+             tmp[i] = x # This creates only the wrapping of the objects and does not copy.
+      py_arrays[column] = ndarray(tmp, result_ptrs[column])
+   return py_arrays
 
 # This function is injected as method to the respective classes in Pythonize.cxx.
 _root._RDataFrameAsNumpy = _RDataFrameAsNumpy
@@ -446,14 +446,14 @@ if (sys.maxsize > 2**32): # https://docs.python.org/3/library/platform.html#cros
 ### RINT command emulation ------------------------------------------------------
 def _excepthook( exctype, value, traceb ):
  # catch syntax errors only (they contain the full line)
-   if isinstance( value, SyntaxError ) and value.text:
-      cmd, arg = split( value.text[:-1] )
-
+   if isinstance( value, SyntaxError ):
+      if value.text:
+         cmd, arg = split( value.text[:-1] )
     # mimic ROOT/Cling commands
-      if cmd == '.q':
-         sys.exit( 0 )
-      elif cmd == '.?' or cmd == '.help':
-         sys.stdout.write( """PyROOT emulation of Cling commands.
+         if cmd == '.q':
+            sys.exit( 0 )
+         elif cmd in ['.?', '.help']:
+            sys.stdout.write( """PyROOT emulation of Cling commands.
 All emulated commands must be preceded by a . (dot).
 ===========================================================================
 Help:        ?         : this help
@@ -467,30 +467,28 @@ The standard python help system is available through a call to 'help()' or
 'help(<id>)' where <id> is an identifier, e.g. a class or function such as
 TPad or TPad.cd, etc.
 """ )
-         return
-      elif cmd == '.!' and arg:
-         return os.system( arg )
-      elif cmd == '.x' and arg:
-         import __main__
-         fn = os.path.expanduser( os.path.expandvars( arg ) )
-         execfile( fn, __main__.__dict__, __main__.__dict__ )
-         return
-      elif cmd == '.L':
-         return _root.gSystem.Load( arg )
-      elif cmd == '.cd' and arg:
-         os.chdir( arg )
-         return
-      elif cmd == '.ls':
-         return sys.modules[ __name__ ].gDirectory.ls()
-      elif cmd == '.pwd':
-         return sys.modules[ __name__ ].gDirectory.pwd()
-   elif isinstance( value, SyntaxError ) and \
-      value.msg == "can't assign to function call":
+            return
+         elif cmd == '.!' and arg:
+            return os.system( arg )
+         elif cmd == '.x' and arg:
+            import __main__
+            fn = os.path.expanduser( os.path.expandvars( arg ) )
+            execfile( fn, __main__.__dict__, __main__.__dict__ )
+            return
+         elif cmd == '.L':
+            return _root.gSystem.Load( arg )
+         elif cmd == '.cd' and arg:
+            os.chdir( arg )
+            return
+         elif cmd == '.ls':
+            return sys.modules[ __name__ ].gDirectory.ls()
+         elif cmd == '.pwd':
+            return sys.modules[ __name__ ].gDirectory.pwd()
+      elif value.msg == "can't assign to function call":
          sys.stdout.write( """Are you trying to assign a value to a reference return, for example to the
 result of a call to "double& SMatrix<>::operator()(int,int)"? If so, then
 please use operator[] instead, as in e.g. "mymatrix[i][j] = somevalue".
 """ )
-
  # normal exception processing
    _orig_ehook( exctype, value, traceb )
 
@@ -514,7 +512,7 @@ except ImportError:
    import builtins as __builtin__  # name change in p3
 _orig_ihook = __builtin__.__import__
 def _importhook( name, *args, **kwds ):
-   if name[0:5] == 'ROOT.':
+   if name[:5] == 'ROOT.':
       try:
          sys.modules[ name ] = getattr( sys.modules[ 'ROOT' ], name[5:] )
       except Exception:
@@ -592,16 +590,13 @@ class ModuleFacade( types.ModuleType ):
 
    def __setattr2( self, name, value ):     # "running" getattr
     # to allow assignments to ROOT globals such as ROOT.gDebug
-      if not name in self.__dict__:
+      if name not in self.__dict__:
          try:
           # assignment to an existing ROOT global (establishes proxy)
             setattr( self.__class__, name, _root.GetCppGlobal( name ) )
          except LookupError:
           # allow a few limited cases where new globals can be set
-            if sys.hexversion >= 0x3000000:
-               pylong = int
-            else:
-               pylong = long
+            pylong = int if sys.hexversion >= 0x3000000 else long
             tcnv = { bool        : 'bool %s = %d;',
                      int         : 'int %s = %d;',
                      pylong      : 'long %s = %d;',
@@ -612,7 +607,6 @@ class ModuleFacade( types.ModuleType ):
                setattr( self.__class__, name, _root.GetCppGlobal( name ) )
             except KeyError:
                pass           # can still assign normally, to the module
-
     # actual assignment through descriptor, or normal python way
       return super( self.__class__, self ).__setattr__( name, value )
 

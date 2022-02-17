@@ -96,8 +96,7 @@ def initialise(pkg, __init__py, cmake_shared_library_prefix, cmake_shared_librar
             }
 
             op = name[8:]
-            result = gC2POperatorMapping.get(op, None)
-            if result:
+            if result := gC2POperatorMapping.get(op, None):
                 return result
             print(children)
 

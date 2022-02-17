@@ -55,11 +55,10 @@ class ComputationGraphGenerator(object):
             # In the first recursive state, just set the
             # current DistRDF node as the head node
             node_py = self.headnode
-        else:
-            if (node_py.operation.is_action() or
+        elif (node_py.operation.is_action() or
                     node_py.operation.is_instant_action()):
-                # Collect all action nodes in order to return them
-                return_nodes.append(node_py)
+            # Collect all action nodes in order to return them
+            return_nodes.append(node_py)
 
         for n in node_py.children:
             # Recurse through children and collect them

@@ -73,7 +73,7 @@ class TTreeBranch(unittest.TestCase):
         f,t = self.create_file_and_tree()
 
         a = array('d', self.arraysize*[ self.fval ])
-        t.Branch('arrayb', a, 'arrayb[' + str(self.arraysize) + ']/D')
+        t.Branch('arrayb', a, f'arrayb[{str(self.arraysize)}]/D')
 
         self.fill_and_close(f, t)
 
@@ -88,7 +88,7 @@ class TTreeBranch(unittest.TestCase):
         f,t = self.create_file_and_tree()
 
         a = np.array(self.arraysize*[ self.fval ]) # dtype='float64'
-        t.Branch('arrayb', a, 'arrayb[' + str(self.arraysize) + ']/D')
+        t.Branch('arrayb', a, f'arrayb[{str(self.arraysize)}]/D')
 
         self.fill_and_close(f, t)
 
@@ -120,7 +120,7 @@ class TTreeBranch(unittest.TestCase):
         f,t = self.get_tree()
 
         for entry in t:
-            for ms in [ getattr(entry, 'structb' + str(i)) for i in range(6) ]:
+            for ms in [getattr(entry, f'structb{str(i)}') for i in range(6)]:
                 self.assertEqual(ms.myint1, self.ival)
                 self.assertEqual(ms.myint2, 2*self.ival)
 
@@ -165,7 +165,7 @@ class TTreeBranch(unittest.TestCase):
         f,t = self.get_tree()
 
         for entry in t:
-            for v in [ getattr(entry, 'vectorb' + str(i)) for i in range(6) ]:
+            for v in [getattr(entry, f'vectorb{str(i)}') for i in range(6)]:
                 for elem in v:
                     self.assertEqual(elem, self.fval)
 

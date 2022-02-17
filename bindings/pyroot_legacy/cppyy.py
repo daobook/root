@@ -141,9 +141,9 @@ if not _builtin_cppyy:
 
 #--- LoadDictionary function and aliases -----------------------------
 def loadDictionary(name):
-   # prepend "lib" 
+   # prepend "lib"
    if sys.platform != 'win32' and name[:3] != 'lib':
-       name = 'lib' + name
+      name = f'lib{name}'
    sc = _backend.gSystem.Load(name)
    if sc == -1: raise RuntimeError("Error Loading dictionary")
 loadDict = loadDictionary
@@ -207,14 +207,15 @@ makeNamespace = Namespace
 def makeClass( name ) :
    return _backend.CreateScopeProxy( name )
  
-def getAllClasses() :
+def getAllClasses():
    TClassTable = makeClass( 'TClassTable' )
    TClassTable.Init()
    classes = []
-   while True :
-      c = TClassTable.Next()
-      if c : classes.append( c )
-      else : break
+   while True:
+      if c := TClassTable.Next():
+         if c : classes.append( c )
+      else:
+         break
    return classes
 
 def add_smart_pointer(typename):

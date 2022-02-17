@@ -15,7 +15,7 @@ class TestDATATYPES:
         import cppyy
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
-        cls.has_byte = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
+        cls.has_byte = cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402
 
     def test01_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
@@ -28,7 +28,9 @@ class TestDATATYPES:
 
         # reading boolean type
         assert c.m_bool == False
-        assert not c.get_bool(); assert not c.get_bool_cr(); assert not c.get_bool_r()
+        assert not c.get_bool()
+        assert not c.get_bool_cr()
+        assert not c.get_bool_r()
 
         # reading char types
         assert c.m_char  == 'a'
@@ -42,20 +44,44 @@ class TestDATATYPES:
         assert c.m_char32 == u'\u00df'
 
         # reading integer types
-        assert c.m_int8    == - 9; assert c.get_int8_cr()    == - 9; assert c.get_int8_r()    == - 9
-        assert c.m_uint8   ==   9; assert c.get_uint8_cr()   ==   9; assert c.get_uint8_r()   ==   9 
+        assert c.m_int8    == - 9
+        assert c.get_int8_cr()    == - 9
+        assert c.get_int8_r()    == - 9
+        assert c.m_uint8   ==   9
+        assert c.get_uint8_cr()   ==   9
+        assert c.get_uint8_r()   ==   9
         if self.has_byte:
             assert c.m_byte == ord('d'); assert c.get_byte_cr() == ord('d'); assert c.get_byte_r() == ord('d')
-        assert c.m_short   == -11; assert c.get_short_cr()   == -11; assert c.get_short_r()   == -11
-        assert c.m_ushort  ==  11; assert c.get_ushort_cr()  ==  11; assert c.get_ushort_r()  ==  11
-        assert c.m_int     == -22; assert c.get_int_cr()     == -22; assert c.get_int_r()     == -22
-        assert c.m_uint    ==  22; assert c.get_uint_cr()    ==  22; assert c.get_uint_r()    ==  22
-        assert c.m_long    == -33; assert c.get_long_cr()    == -33; assert c.get_long_r()    == -33
-        assert c.m_ulong   ==  33; assert c.get_ulong_cr()   ==  33; assert c.get_ulong_r()   ==  33
-        assert c.m_llong   == -44; assert c.get_llong_cr()   == -44; assert c.get_llong_r()   == -44
-        assert c.m_ullong  ==  44; assert c.get_ullong_cr()  ==  44; assert c.get_ullong_r()  ==  44
-        assert c.m_long64  == -55; assert c.get_long64_cr()  == -55; assert c.get_long64_r()  == -55
-        assert c.m_ulong64 ==  55; assert c.get_ulong64_cr() ==  55; assert c.get_ulong64_r() ==  55
+        assert c.m_short   == -11
+        assert c.get_short_cr()   == -11
+        assert c.get_short_r()   == -11
+        assert c.m_ushort  ==  11
+        assert c.get_ushort_cr()  ==  11
+        assert c.get_ushort_r()  ==  11
+        assert c.m_int     == -22
+        assert c.get_int_cr()     == -22
+        assert c.get_int_r()     == -22
+        assert c.m_uint    ==  22
+        assert c.get_uint_cr()    ==  22
+        assert c.get_uint_r()    ==  22
+        assert c.m_long    == -33
+        assert c.get_long_cr()    == -33
+        assert c.get_long_r()    == -33
+        assert c.m_ulong   ==  33
+        assert c.get_ulong_cr()   ==  33
+        assert c.get_ulong_r()   ==  33
+        assert c.m_llong   == -44
+        assert c.get_llong_cr()   == -44
+        assert c.get_llong_r()   == -44
+        assert c.m_ullong  ==  44
+        assert c.get_ullong_cr()  ==  44
+        assert c.get_ullong_r()  ==  44
+        assert c.m_long64  == -55
+        assert c.get_long64_cr()  == -55
+        assert c.get_long64_r()  == -55
+        assert c.m_ulong64 ==  55
+        assert c.get_ulong64_cr() ==  55
+        assert c.get_ulong64_r() ==  55
 
         # reading floating point types
         assert round(c.m_float          + 66.,  5) == 0
@@ -111,7 +137,7 @@ class TestDATATYPES:
         alpha = [ (1, 2), (1, 2), (-1, -2),   (3, 4), (-5, -6), (7, 8), (-9, -10), (11, 12)]
         if self.has_byte: names.append('byte'); alpha.append((3,4))
 
-        for j in range(self.N):
+        for _ in range(self.N):
             assert getattr(c, 'm_%s_array'    % names[i])[i]   == alpha[i][0]*i
             assert getattr(c, 'get_%s_array'  % names[i])()[i] == alpha[i][0]*i
             assert getattr(c, 'm_%s_array2'   % names[i])[i]   == alpha[i][1]*i
@@ -157,39 +183,64 @@ class TestDATATYPES:
         assert isinstance(c, CppyyTestData)
 
         # boolean types through functions
-        c.set_bool(True);  assert c.get_bool() == True
-        c.set_bool(0);     assert c.get_bool() == False
+        c.set_bool(True)
+        assert c.get_bool() == True
+        c.set_bool(0)
+        assert c.get_bool() == False
 
         # boolean types through data members
-        c.m_bool = True;   assert c.get_bool() == True
-        c.set_bool(True);  assert c.m_bool     == True
-        c.m_bool = 0;      assert c.get_bool() == False
-        c.set_bool(0);     assert c.m_bool     == False
+        c.m_bool = True
+        assert c.get_bool() == True
+        c.set_bool(True)
+        assert c.m_bool
+        c.m_bool = 0
+        assert c.get_bool() == False
+        c.set_bool(0)
+        assert c.m_bool     == False
         raises(ValueError, c.set_bool, 10)
 
         # char types through functions
-        c.set_char('c');   assert c.get_char()  == 'c'
-        c.set_uchar('e');  assert c.get_uchar() == 'e'
-        c.set_wchar(u'F'); assert c.get_wchar() == u'F'
+        c.set_char('c')
+        assert c.get_char()  == 'c'
+        c.set_uchar('e')
+        assert c.get_uchar() == 'e'
+        c.set_wchar(u'F')
+        assert c.get_wchar() == u'F'
         assert type(c.get_wchar()) == pyunicode
-        c.set_char16(u'\u00f2');     assert c.get_char16() == u'\u00f2'
-        c.set_char32(u'\U0001f31c'); assert c.get_char32() == u'\U0001f31c'
+        c.set_char16(u'\u00f2')
+        assert c.get_char16() == u'\u00f2'
+        c.set_char32(u'\U0001f31c')
+        assert c.get_char32() == u'\U0001f31c'
 
         # char types through data members
-        c.m_char = 'b';    assert c.get_char()  ==     'b'
-        c.m_char = 40;     assert c.get_char()  == chr(40)
-        c.set_char('c');   assert c.m_char      ==     'c'
-        c.set_char(41);    assert c.m_char      == chr(41)
-        c.m_uchar = 'd';   assert c.get_uchar() ==     'd'
-        c.m_uchar = 42;    assert c.get_uchar() == chr(42)
-        c.set_uchar('e');  assert c.m_uchar     ==     'e'
-        c.set_uchar(43);   assert c.m_uchar     == chr(43)
-        c.m_wchar = u'G';  assert c.get_wchar() ==    u'G'
-        c.set_wchar(u'H'); assert c.m_wchar     ==    u'H'
-        c.m_char16 = u'\u00f3';  assert c.get_char16() == u'\u00f3'
-        c.set_char16(u'\u00f4'); assert c.m_char16     == u'\u00f4'
-        c.m_char32 = u'\U0001f31d';  assert c.get_char32() == u'\U0001f31d'
-        c.set_char32(u'\U0001f31e'); assert c.m_char32     == u'\U0001f31e'
+        c.m_char = 'b'
+        assert c.get_char()  ==     'b'
+        c.m_char = 40
+        assert c.get_char()  == chr(40)
+        c.set_char('c')
+        assert c.m_char      ==     'c'
+        c.set_char(41)
+        assert c.m_char      == chr(41)
+        c.m_uchar = 'd'
+        assert c.get_uchar() ==     'd'
+        c.m_uchar = 42
+        assert c.get_uchar() == chr(42)
+        c.set_uchar('e')
+        assert c.m_uchar     ==     'e'
+        c.set_uchar(43)
+        assert c.m_uchar     == chr(43)
+        c.m_wchar = u'G'
+        assert c.get_wchar() ==    u'G'
+        c.set_wchar(u'H')
+        assert c.m_wchar     ==    u'H'
+        c.m_char16 = u'\u00f3'
+        assert c.get_char16() == u'\u00f3'
+        c.set_char16(u'\u00f4')
+        assert c.m_char16     == u'\u00f4'
+        c.m_char32 = u'\U0001f31d'
+        assert c.get_char32() == u'\U0001f31d'
+        c.set_char32(u'\U0001f31e')
+        assert c.m_char32     == u'\U0001f31e'
 
         raises(ValueError, c.set_char,   "string")
         raises(ValueError, c.set_char,   500)
@@ -204,36 +255,48 @@ class TestDATATYPES:
         if self.has_byte: names.append('byte')
 
         for i in range(len(names)):
-            setattr(c, 'm_'+names[i], i)
+            setattr(c, f'm_{names[i]}', i)
             assert eval('c.get_%s()' % names[i]) == i
 
         for i in range(len(names)):
-            getattr(c, 'set_'+names[i])(2*i)
+            getattr(c, f'set_{names[i]}')(2*i)
             assert eval('c.m_%s' % names[i]) == 2*i
 
         for i in range(len(names)):
-            getattr(c, 'set_'+names[i]+'_cr')(3*i)
+            getattr(c, f'set_{names[i]}_cr')(3*i)
             assert eval('c.m_%s' % names[i]) == 3*i
 
         for i in range(len(names)):
-            getattr(c, 'set_'+names[i]+'_rv')(4*i)
+            getattr(c, f'set_{names[i]}_rv')(4*i)
             assert eval('c.m_%s' % names[i]) == 4*i
 
         # float types through functions
-        c.set_float(0.123);   assert round(c.get_float()   - 0.123, 5) == 0
-        c.set_double(0.456);  assert round(c.get_double()  - 0.456, 8) == 0
-        c.set_ldouble(0.789); assert round(c.get_ldouble() - 0.789, 8) == 0
+        c.set_float(0.123)
+        assert round(c.get_float()   - 0.123, 5) == 0
+        c.set_double(0.456)
+        assert round(c.get_double()  - 0.456, 8) == 0
+        c.set_ldouble(0.789)
+        assert round(c.get_ldouble() - 0.789, 8) == 0
 
         # float types through data members
-        c.m_float = 0.123;       assert round(c.get_float()   - 0.123, 5) == 0
-        c.set_float(0.234);      assert round(c.m_float       - 0.234, 5) == 0
-        c.set_float_cr(0.456);   assert round(c.m_float       - 0.456, 5) == 0
-        c.m_double = 0.678;      assert round(c.get_double()  - 0.678, 8) == 0
-        c.set_double(0.890);     assert round(c.m_double      - 0.890, 8) == 0
-        c.set_double_cr(0.012);  assert round(c.m_double      - 0.012, 8) == 0
-        c.m_ldouble = 0.876;     assert round(c.get_ldouble() - 0.876, 8) == 0
-        c.set_ldouble(0.098);    assert round(c.m_ldouble     - 0.098, 8) == 0
-        c.set_ldouble_cr(0.210); assert round(c.m_ldouble     - 0.210, 8) == 0
+        c.m_float = 0.123
+        assert round(c.get_float()   - 0.123, 5) == 0
+        c.set_float(0.234)
+        assert round(c.m_float       - 0.234, 5) == 0
+        c.set_float_cr(0.456)
+        assert round(c.m_float       - 0.456, 5) == 0
+        c.m_double = 0.678
+        assert round(c.get_double()  - 0.678, 8) == 0
+        c.set_double(0.890)
+        assert round(c.m_double      - 0.890, 8) == 0
+        c.set_double_cr(0.012)
+        assert round(c.m_double      - 0.012, 8) == 0
+        c.m_ldouble = 0.876
+        assert round(c.get_ldouble() - 0.876, 8) == 0
+        c.set_ldouble(0.098)
+        assert round(c.m_ldouble     - 0.098, 8) == 0
+        c.set_ldouble_cr(0.210)
+        assert round(c.m_ldouble     - 0.210, 8) == 0
 
         # (non-)writing of enum types
         raises(TypeError, setattr, CppyyTestData, 'kNothing', 42)
@@ -251,11 +314,11 @@ class TestDATATYPES:
         if self.has_byte: atypes.append('B')
         for j in range(len(names)):
             b = array.array(atypes[j], a)
-            setattr(c, 'm_'+names[j]+'_array', b)     # buffer copies
+            setattr(c, f'm_{names[j]}_array', b)
             for i in range(self.N):
                 assert eval('c.m_%s_array[i]' % names[j]) == b[i]
 
-            setattr(c, 'm_'+names[j]+'_array2', b)    # pointer copies
+            setattr(c, f'm_{names[j]}_array2', b)
             assert 3 < self.N
             b[3] = 28
             for i in range(self.N):
@@ -815,7 +878,7 @@ class TestDATATYPES:
         gbl = cppyy.gbl
 
         c1 = cppyy.bind_object(0, gbl.CppyyTestData)
-        assert c1 == None
+        assert c1 is None
         assert None == c1
 
         c2 = cppyy.bind_object(0, gbl.CppyyTestData)
@@ -824,7 +887,7 @@ class TestDATATYPES:
 
         # FourVector overrides operator==
         l1 = cppyy.bind_object(0, gbl.FourVector)
-        assert l1 == None
+        assert l1 is None
         assert None == l1
 
         assert c1 != l1

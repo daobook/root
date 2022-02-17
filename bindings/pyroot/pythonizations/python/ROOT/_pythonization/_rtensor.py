@@ -38,11 +38,11 @@ def get_array_interface(self):
     if pointer == 0:
         pointer == 1
     return {
-        "shape": tuple(s for s in shape),
+        "shape": tuple(shape),
         "strides": tuple(s * dtype_size for s in strides),
         "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
         "version": 3,
-        "data": (pointer, False)
+        "data": (pointer, False),
     }
 
 
@@ -93,9 +93,8 @@ def RTensorGetitem(self, idx):
             if x.step != None:
                 raise Exception("RTensor does not support slices with step size unequal 1.")
             idx[i] = slice(start, stop, None)
-        else:
-            if x < 0:
-                idx[i] += shape[i]
+        elif x < 0:
+            idx[i] += shape[i]
 
     # If a slice is requested, return a new RTensor
     if isSlice:

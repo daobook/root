@@ -22,13 +22,9 @@ def _check_type(idx, msg):
     # - msg: message to show in case of type issue
 
     # Python2 also allows long indices
-    if sys.version_info >= (3,0):
-        allowed_types = (int,)
-    else:
-        allowed_types = (int, long)
-
+    allowed_types = (int, ) if sys.version_info >= (3,0) else (int, long)
     t = type(idx)
-    if not t in allowed_types:
+    if t not in allowed_types:
         raise TypeError(msg.format(t.__name__))
 
 def _check_index(self, idx):
@@ -75,7 +71,7 @@ def _remove_at(self, idx):
     # - self: collection to remove the item from
     # - idx: index of the item, always positive
     lnk = self.FirstLink()
-    for i in range(idx):
+    for _ in range(idx):
         lnk = lnk.Next()
     return self.Remove(lnk)
 
@@ -221,15 +217,16 @@ def _sort_pyz(self, *args, **kwargs):
     if len(self) == 0:
         return
 
-    if not args and not kwargs:
-        # No arguments -> rely on ROOT's Sort
-        self.Sort()
-    else:
+    if args or kwargs:
         # Sort in a Python list copy
         l = list(self)
         l.sort(*args, **kwargs)
         self.Clear()
         self.extend(l)
+
+    else:
+        # No arguments -> rely on ROOT's Sort
+        self.Sort()
 
 def _index_pyz(self, val):
     # Parameters:

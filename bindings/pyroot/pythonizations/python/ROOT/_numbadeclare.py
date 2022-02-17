@@ -200,7 +200,7 @@ def pywrapper({SIGNATURE}):
         else:
             exec(pywrappercode) in glob, locals()
 
-        if not 'pywrapper' in locals():
+        if 'pywrapper' not in locals():
             raise Exception('Failed to create Python wrapper function:\n{}'.format(pywrappercode))
 
         # Jit the Python wrapper code
@@ -294,13 +294,17 @@ namespace Numba {{
     {RETURN_OP}
 }}
 }}""".format(
-                RETURN_TYPE='ROOT::' + return_type if 'RVec' in return_type else return_type,
-                FUNC_NAME=name,
-                INPUT_SIGNATURE=input_signature,
-                FUNC_PTR=address,
-                FUNC_PTR_TYPE=func_ptr_type,
-                VECBOOL_CONVERSION='\n    '.join(vecbool_conversion),
-                RETURN_OP=return_op)
+            RETURN_TYPE=f'ROOT::{return_type}'
+            if 'RVec' in return_type
+            else return_type,
+            FUNC_NAME=name,
+            INPUT_SIGNATURE=input_signature,
+            FUNC_PTR=address,
+            FUNC_PTR_TYPE=func_ptr_type,
+            VECBOOL_CONVERSION='\n    '.join(vecbool_conversion),
+            RETURN_OP=return_op,
+        )
+
 
         # Jit wrapper C++ code
         err = gbl_namespace.gInterpreter.Declare(cppwrappercode)

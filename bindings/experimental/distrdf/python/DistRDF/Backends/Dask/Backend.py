@@ -42,8 +42,7 @@ class DaskBackend(Base.BaseBackend):
         execution. Currently, we try to get the total number of worker logical
         cores in the cluster.
         """
-        workers_dict = self.client.scheduler_info().get("workers")
-        if workers_dict:
+        if workers_dict := self.client.scheduler_info().get("workers"):
             # The 'workers' key exists in the dictionary and it is non-empty
             return sum(worker['nthreads'] for worker in workers_dict.values())
         else:

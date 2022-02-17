@@ -28,9 +28,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         """
         Test reading multiple columns
         """
-        data = {}
-        for dtype in self.dtypes:
-            data[dtype] = np.array([1, 2, 3], dtype=dtype)
+        data = {dtype: np.array([1, 2, 3], dtype=dtype) for dtype in self.dtypes}
         df = ROOT.RDF.MakeNumpyDataFrame(data)
         colnames = df.GetColumnNames()
         # Test column names

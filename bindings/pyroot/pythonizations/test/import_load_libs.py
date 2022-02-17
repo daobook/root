@@ -96,8 +96,7 @@ class ImportLoadLibs(unittest.TestCase):
         for l in libs:
             matched = False
             for r in self.known_libs:
-                m = re.match(r, l)
-                if m:
+                if m := re.match(r, l):
                     if m.group(0) == l:
                         matched = True
                         good_libs.append(l)

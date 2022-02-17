@@ -36,16 +36,18 @@ except ImportError:
         warnings.warn('swig tests disabled')
         swig = False
 
-all_benches = []
-
-
-#- group: stl-vector ---------------------------------------------------------
-all_benches.append(('stl-vector', (
-"""
+all_benches = [
+    (
+        'stl-vector',
+        (
+            """
 def test_{0}_stl_vector(benchmark):
     benchmark(sum, {1}.global_vector)
 """,
-)))
+        ),
+    )
+]
+
 
 
 #- actual creation of all benches --------------------------------------------

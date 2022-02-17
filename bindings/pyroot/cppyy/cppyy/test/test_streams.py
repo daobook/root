@@ -30,4 +30,4 @@ class TestSTDStreams:
 
         import cppyy
 
-        assert not (cppyy.gbl.std.cout is None)
+        assert cppyy.gbl.std.cout is not None

@@ -20,12 +20,11 @@ class JSRootMagics(Magic):
     def __init__(self, kernel):
         super(JSRootMagics, self).__init__(kernel)
     @option('arg', default="on", help='Enable or disable JavaScript visualisation. Possible values: on (default), off')
-
     def line_jsroot(self, args):
         '''Change the visualisation of plots from images to interactive JavaScript objects.'''
-        if args == 'on' or args == '':
-           self.printErrorIfNeeded()
-           enableJSVis()
+        if args in ['on', '']:
+            self.printErrorIfNeeded()
+            enableJSVis()
         elif args == 'off':
            disableJSVis()
         elif args == 'debug':
